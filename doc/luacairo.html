@@ -1,0 +1,4067 @@
+<html>
+<head>
+<title>Lua Cairo</title>
+<meta http-equiv="Content-Type" content="text/html; charset=iso-8859-1">
+<meta http-equiv="Content-Style-Type" content="text/css">
+<meta name="author" content="Hakki Dogusan">
+
+<style type="text/css">
+ 
+/*modified from lua.css*/ 
+body {
+	color: #000000 ;
+	background-color: #FDFDF0 ; /* FFFFE0 LightYellow */
+	font-family: Verdana, Arial, Helvetica, sans-serif ;
+	text-align: justify ;
+	margin-right: 20px ;
+	margin-left: 20px ;
+}
+
+h1, h2, h3, h4 {
+	font-weight: normal ;
+	font-style: italic ;
+}
+
+a:link {
+	color: #000080 ;
+	background-color: inherit ;
+	text-decoration: none ;
+}
+
+a:visited {
+	background-color: inherit ;
+	text-decoration: none ;
+}
+
+a:link:hover, a:visited:hover {
+	color: #000080 ;
+	background-color: #E0E0FF ;
+}
+
+a:link:active, a:visited:active {
+	color: #FF0000 ;
+}
+
+hr {
+	border: 0 ;
+	height: 1px ;
+	color: #a0a0a0 ;
+	background-color: #a0a0a0 ;
+}
+
+.block {
+ font-family: Verdana, Arial, Helvetica, sans-serif;
+ font-size: 14px;
+ font-weight: normal;
+ line-height: 15px;
+ padding-top: 7px;
+ padding-left: 5px;
+ padding-right: 5px;
+ padding-bottom: 9px;
+ color: #464c64;
+ background-color: #EEEEE0; /* ivory2 */
+ }
+
+li {
+ font-family: Verdana, Arial, Helvetica, sans-serif;
+ font-size: 12px;
+ font-weight: normal;
+ line-height: 18px;
+ padding-bottom: 2px;
+ color: #333333;
+ }
+
+li op { /* optional parameter */
+ color: #696969; /* DimGrey */
+}
+li du { /* different usage */
+ color: #CD6090; /* HotPink3 */
+}
+li ni { /* notimplemented */
+ color: #ff008f;
+}
+li lud { /* light user data */
+ color: #8B2323; /* brown4 */
+}
+li ud { /* user data */
+ color: #8B2323; /* brown4 */
+ font-weight: bold;
+}
+li fm { /* FIXME */
+ color: #ff0000;
+}
+
+</style>
+</head>
+<body>
+
+<h1>
+<a href="http://www.lua.org/">Lua</a> <a href="http://cairographics.org/">Cairo</a>
+</h1>
+
+<ul>
+<li><a href="#conventions">Color conventions</a>
+<li><a href="#sample">Sample</a>
+<li><a href="#cairo_api">Cairo API</a>
+<li><a href="#modify_state">Modify state</a>
+<li><a href="#path_creation_functions">Path creation functions</a>
+<li><a href="#painting_functions">Painting functions</a>
+<li><a href="#font_text_functions">Font/Text functions</a>
+<li><a href="#query_functions">Query functions</a>
+<li><a href="#image_surface">Image surface</a>
+<li><a href="#pattern_creation_functions">Pattern creation functions</a>
+<li><a href="#matrix_functions">Matrix functions</a>
+<li><a href="#svg_surface">SVG surface</a>
+<li><a href="#pdf_surface">PDF surface</a>
+<li><a href="#ps_surface">PS surface</a>
+<li><a href="#xcb_surface">XCB surface</a>
+<li><a href="#xlib_surface">XLIB surface</a>
+<li><a href="#win32_surface">WIN32 surface</a>
+<li><a href="#beos_surface">BEOS surface</a>
+<li><a href="#directfb_surface">DIRECTFB surface</a>
+<li><a href="#os2_surface">OS2 surface</a>
+<li><a href="#glitz_surface">GLITZ surface</a>
+<li><a href="#quartz_surface">QUARTZ surface</a>
+<li><a href="#quartz_image_surface">QUARTZ Image surface</a>
+<li><a href="#sub_surface">Sub surface</a>
+<li><a href="#recording_surface">Recording surface</a>
+<li><a href="#drm_surface">DRM surface</a>
+<li><a href="#gl_surface">GL surface</a>
+<li><a href="#qt_surface">QT surface</a>
+<li><a href="#script_surface">Script surface</a>
+<li><a href="#skia_surface">Skia surface</a>
+<li><a href="#tee_surface">Tee surface</a>
+<li><a href="#vg_surface">VG surface</a>
+<li><a href="#xml_surface">XML surface</a>
+<li><a href="#quartz_font">QUARTZ font</a>
+<li><a href="#ft_font">FT font</a>
+<li><a href="#region">Region functions</a>
+<li><a href="#device">Device functions</a>
+<li><a href="#types">Types</a>
+<li><a href="#oointerface">Object Oriented Interface</a>
+</ul>
+
+
+<a name="conventions"><h2>Color conventions</h2></a>
+<ul>
+<li>Optional parameter: <op>param</op></li>
+<li>Lua usage is different from C: <du>[WARN] ...</du></li>
+<li>Not implemented: <ni>not implemented</ni></li>
+<li>Light user data: <lud>lud</lud></li>
+<li>User data: <ud>ud</ud></li>
+</ul>
+
+
+<a name="sample"><h2>Sample</h2></a>
+<div class="block"><pre>
+-- taken from http://luaforge.net/projects/luacairo/
+<b>
+local cairo = require"lcairo"
+local CAIRO = cairo
+</b>
+local w = 320
+local h = 240
+local outfile = "cairo_test2.png"
+
+local cs = cairo.image_surface_create (CAIRO.FORMAT_RGB24, w, h)
+local cr = cairo.create (cs)
+
+cairo.set_source_rgb (cr, 1, 1, 1)
+cairo.paint (cr)
+
+cairo.set_source_rgb (cr, 0, 0, 0)
+cairo.select_font_face (cr, "Sans", CAIRO.FONT_SLANT_NORMAL, CAIRO.FONT_WEIGHT_BOLD)
+cairo.set_font_size (cr, w/6)
+cairo.move_to (cr, 0, h/4)
+cairo.show_text (cr, "Hello cairo!")
+
+cairo.select_font_face (cr, "Sans", CAIRO.FONT_SLANT_NORMAL, CAIRO.FONT_WEIGHT_NORMAL)
+cairo.set_font_size (cr, w/8)
+cairo.move_to (cr, 0, 3*h/4)
+cairo.text_path (cr, "Lua calling...")
+cairo.set_source_rgb (cr, 0.5, 0.5, 1)
+cairo.fill_preserve (cr)
+cairo.set_source_rgb (cr, 0, 0, 0)
+cairo.set_line_width (cr, w/200)
+cairo.stroke (cr)
+
+cairo.surface_write_to_png (cs, outfile)
+</pre></div>
+
+<a name="oosample"><h2>Sample (for object oriented usage)</h2></a>
+<div class="block"><pre>
+-- Adapted from Sample
+<b>
+local cairo = require"lcairo"
+local CAIRO = cairo
+</b>
+local w = 320
+local h = 240
+local outfile = "cairo_test2.png"
+
+local cs = cairo.ImageSurface (CAIRO.FORMAT_RGB24, w, h)
+local cr = cairo.Context (cs)
+
+cr:set_source_rgb (1, 1, 1)
+cr:paint ()
+
+cr:set_source_rgb (0, 0, 0)
+cr:select_font_face ("Sans", CAIRO.FONT_SLANT_NORMAL, CAIRO.FONT_WEIGHT_BOLD)
+cr:set_font_size (w/6)
+cr:move_to (0, h/4)
+cr:show_text ("Hello cairo!")
+
+cr:select_font_face ("Sans", CAIRO.FONT_SLANT_NORMAL, CAIRO.FONT_WEIGHT_NORMAL)
+cr:set_font_size (w/8)
+cr:move_to (0, 3*h/4)
+cr:text_path ("Lua calling...")
+cr:set_source_rgb (0.5, 0.5, 1)
+cr:fill_preserve ()
+cr:set_source_rgb (0, 0, 0)
+cr:set_line_width (w/200)
+cr:stroke ()
+
+cs:write_to_png (outfile)
+</pre></div>
+
+
+<h2>Helper functions</h2>
+
+<ul>
+<li><pre>
+[WIN32] <lud>cr</lud> = cairo.CreateContext(<lud>HDC</lud>)
+</pre></li>
+<li><pre>
+[GDK]   <lud>cr</lud> = cairo.CreateContext(<lud>GdkDrawable *</lud>)
+</pre></li>
+</ul>
+
+<ul>
+<li><pre>
+Cairo-1.6
+[WIN32] <lud>cr</lud> = cairo.CreatePrintingContext(<lud>HDC</lud>)
+</pre></li>
+</ul>
+
+
+<!--<h2>Cairo API</h2> -->
+<h2><a name="cairo_api">Cairo API</a></h2>
+
+<ul>
+
+<li><pre>
+[C]   int cairo_version (void);
+[Lua] int = cairo.version()
+</pre></li>
+
+<li><pre>
+[C]   const char* cairo_version_string (void);
+[Lua] str = cairo.version_string()
+</pre></li>
+
+<li><pre>
+[C]   <a href="#cairo_t">cairo_t</a> * cairo_create (<a href="#cairo_surface_t">cairo_surface_t</a> *target);
+[Lua] <lud>cr</lud> = cairo.create(<lud>target</lud>)
+</pre></li>
+
+<li><pre>
+[C]   <a href="#cairo_t">cairo_t</a> * cairo_reference (<a href="#cairo_t">cairo_t</a> *cr);
+[Lua] <lud>ref</lud> = cairo.reference(<lud>cr</lud>)
+</pre></li>
+
+<li><pre>
+[C]   void cairo_destroy (<a href="#cairo_t">cairo_t</a> *cr);
+[Lua] cairo.destroy(<lud>cr</lud>)
+</pre></li>
+
+<li><pre>
+[C]   unsigned int cairo_get_reference_count (<a href="#cairo_t">cairo_t</a> *cr);
+[Lua] int = cairo.get_reference_count(<lud>cr</lud>)
+</pre></li>
+
+<li><pre>
+[C]   void * cairo_get_user_data (<a href="#cairo_t">cairo_t</a> *cr, const <a href="#cairo_user_data_key_t">cairo_user_data_key_t</a> *key);
+[Lua] <ni>not implemented</ni>
+</pre></li>
+
+<li><pre>
+[C]   <a href="#cairo_status_t">cairo_status_t</a> cairo_set_user_data (<a href="#cairo_t">cairo_t</a> *cr, const <a href="#cairo_user_data_key_t">cairo_user_data_key_t</a> *key, void *user_data, <a href="#cairo_destroy_func_t">cairo_destroy_func_t</a> destroy);
+[Lua] <ni>not implemented</ni>
+</pre></li>
+
+<li><pre>
+[C]   void cairo_save (<a href="#cairo_t">cairo_t</a> *cr);
+[Lua] cairo.save(<lud>cr</lud>)
+</pre></li>
+
+<li><pre>
+[C]   void cairo_restore (<a href="#cairo_t">cairo_t</a> *cr);
+[Lua] cairo.restore(<lud>cr</lud>)
+</pre></li>
+
+<li><pre>
+[C]   void cairo_push_group (<a href="#cairo_t">cairo_t</a> *cr);
+[Lua] cairo.push_group(<lud>cr</lud>)
+</pre></li>
+
+<li><pre>
+[C]   void cairo_push_group_with_content (<a href="#cairo_t">cairo_t</a> *cr, <a href="#cairo_content_t">cairo_content_t</a> content);
+[Lua] cairo.push_group_with_content(<lud>cr</lud>, content)
+</pre></li>
+
+<li><pre>
+[C]   <a href="#cairo_pattern_t">cairo_pattern_t</a> * cairo_pop_group (<a href="#cairo_t">cairo_t</a> *cr);
+[Lua] <lud>pat</lud> = cairo.pop_group(<lud>cr</lud>)
+</pre></li>
+
+<li><pre>
+[C]   void cairo_pop_group_to_source (<a href="#cairo_t">cairo_t</a> *cr);
+[Lua] cairo.pop_group_to_source(<lud>cr</lud>)
+</pre></li>
+
+<li><pre>
+[C]   void cairo_surface_get_mime_data (<a href="#cairo_surface_t">cairo_surface_t</a> *surface, const char *mime_type, const unsigned char **data, unsigned long *length);
+[Lua] <ni>not implemented</ni>
+</pre></li>
+
+<li><pre>
+[C]   <a href="#cairo_status_t">cairo_status_t</a> cairo_surface_set_mime_data (<a href="#cairo_surface_t">cairo_surface_t</a> *surface, const char *mime_type, const unsigned char *data, unsigned long length, <a href="#cairo_destroy_func_t">cairo_destroy_func_t</a> destroy, void *closure);
+[Lua] <ni>not implemented</ni>
+</pre></li>
+
+<li><pre>
+[C]   <a href="#cairo_device_t">cairo_device_t</a> * cairo_surface_get_device (<a href="#cairo_surface_t">cairo_surface_t</a> *surface);
+[Lua] <lud>device</lud> = cairo.surface_get_device(<lud>surface</lud>)
+</pre></li>
+
+
+</ul>
+
+<h2><a name="modify_state">Modify state</a></h2>
+
+<ul>
+
+<li><pre>
+[C]   void cairo_set_operator (<a href="#cairo_t">cairo_t</a> *cr, <a href="#cairo_operator_t">cairo_operator_t</a> op);
+[Lua] cairo.set_operator(<lud>cr</lud>, op)
+</pre></li>
+
+<li><pre>
+[C]   void cairo_set_source (<a href="#cairo_t">cairo_t</a> *cr, <a href="#cairo_pattern_t">cairo_pattern_t</a> *source);
+[Lua] cairo.set_source(<lud>cr</lud>, <lud>source</lud>)
+</pre></li>
+
+<li><pre>
+[C]   void cairo_set_source_rgb (<a href="#cairo_t">cairo_t</a> *cr, double red, double green, double blue);
+[Lua] cairo.set_source_rgb(<lud>cr</lud>, red, green, blue)
+</pre></li>
+
+<li><pre>
+[C]   void cairo_set_source_rgba (<a href="#cairo_t">cairo_t</a> *cr, double red, double green, double blue, double alpha);
+[Lua] cairo.set_source_rgba(<lud>cr</lud>, red, green, blue, alpha)
+</pre></li>
+
+<li><pre>
+[C]   void cairo_set_source_surface (<a href="#cairo_t">cairo_t</a> *cr, <a href="#cairo_surface_t">cairo_surface_t</a> *surface, double x, double y);
+[Lua] cairo.set_source_surface(<lud>cr</lud>, <lud>surface</lud>, x, y)
+</pre></li>
+
+<li><pre>
+[C]   void cairo_set_tolerance (<a href="#cairo_t">cairo_t</a> *cr, double tolerance);
+[Lua] cairo.set_tolerance(<lud>cr</lud>, tolerance)
+</pre></li>
+
+<li><pre>
+[C]   void cairo_set_antialias (<a href="#cairo_t">cairo_t</a> *cr, <a href="#cairo_antialias_t">cairo_antialias_t</a> antialias);
+[Lua] cairo.set_antialias(<lud>cr</lud>, antialias)
+</pre></li>
+
+<li><pre>
+[C]   void cairo_set_fill_rule (<a href="#cairo_t">cairo_t</a> *cr, <a href="#cairo_fill_rule_t">cairo_fill_rule_t</a> fill_rule);
+[Lua] cairo.set_fill_rule(<lud>cr</lud>, fill_rule)
+</pre></li>
+
+<li><pre>
+[C]   void cairo_set_line_width (<a href="#cairo_t">cairo_t</a> *cr, double width);
+[Lua] cairo.set_line_width(<lud>cr</lud>, width)
+</pre></li>
+
+<li><pre>
+[C]   void cairo_set_line_cap (<a href="#cairo_t">cairo_t</a> *cr, <a href="#cairo_line_cap_t">cairo_line_cap_t</a> line_cap);
+[Lua] cairo.set_line_cap(<lud>cr</lud>, line_cap)
+</pre></li>
+
+<li><pre>
+[C]   void cairo_set_line_join (<a href="#cairo_t">cairo_t</a> *cr, <a href="#cairo_line_join_t">cairo_line_join_t</a> line_join);
+[Lua] cairo.set_line_join(<lud>cr</lud>, line_join)
+</pre></li>
+
+<li><pre>
+[C]   void cairo_set_dash (<a href="#cairo_t">cairo_t</a> *cr, const double *dashes, int num_dashes, double offset);
+[Lua] cairo.set_dash(<lud>cr</lud>, <du>dashes</du>, <du>num_dashes</du>, offset)
+      <du>[WARN]</du> 'dashes' is either a single number, or a number array(implementation borrowed from Chris Osgood's binding);
+              - cairo.set_dash(cr, 50.0, 1, -50.0)
+              - cairo.set_dash(cr, {50.0, 10.0, 10.0, 10.0}, 4, -50.0)
+</pre></li>
+
+<li><pre>
+[C]   void cairo_set_miter_limit (<a href="#cairo_t">cairo_t</a> *cr, double limit);
+[Lua] cairo.set_miter_limit(<lud>cr</lud>, limit)
+</pre></li>
+
+<li><pre>
+[C]   void cairo_translate (<a href="#cairo_t">cairo_t</a> *cr, double tx, double ty);
+[Lua] cairo.translate(<lud>cr</lud>, tx, ty)
+</pre></li>
+
+<li><pre>
+[C]   void cairo_scale (<a href="#cairo_t">cairo_t</a> *cr, double sx, double sy);
+[Lua] cairo.scale(<lud>cr</lud>, sx, sy)
+</pre></li>
+
+<li><pre>
+[C]   void cairo_rotate (<a href="#cairo_t">cairo_t</a> *cr, double angle);
+[Lua] cairo.rotate(<lud>cr</lud>, angle)
+</pre></li>
+
+<li><pre>
+[C]   void cairo_transform (<a href="#cairo_t">cairo_t</a> *cr, const <a href="#cairo_matrix_t">cairo_matrix_t</a> *matrix);
+[Lua] cairo.transform(<lud>cr</lud>, <ud>matrix</ud>)
+</pre></li>
+
+<li><pre>
+[C]   void cairo_set_matrix (<a href="#cairo_t">cairo_t</a> *cr, const <a href="#cairo_matrix_t">cairo_matrix_t</a> *matrix);
+[Lua] cairo.set_matrix(<lud>cr</lud>, <ud>matrix</ud>)
+</pre></li>
+
+<li><pre>
+[C]   void cairo_identity_matrix (<a href="#cairo_t">cairo_t</a> *cr);
+[Lua] cairo.identity_matrix(<lud>cr</lud>)
+</pre></li>
+
+<li><pre>
+[C]   void cairo_user_to_device (<a href="#cairo_t">cairo_t</a> *cr, double *x, double *y);
+[Lua] <du>[WARN] x, y =</du> cairo.user_to_device(<lud>cr</lud>, x, y)
+</pre></li>
+
+<li><pre>
+[C]   void cairo_user_to_device_distance (<a href="#cairo_t">cairo_t</a> *cr, double *dx, double *dy);
+[Lua] <du>[WARN] dx, dy =</du> cairo.user_to_device_distance(<lud>cr</lud>, dx, dy)
+</pre></li>
+
+<li><pre>
+[C]   void cairo_device_to_user (<a href="#cairo_t">cairo_t</a> *cr, double *x, double *y);
+[Lua] <du>[WARN] x, y =</du> cairo.device_to_user(<lud>cr</lud>, x, y)
+</pre></li>
+
+<li><pre>
+[C]   void cairo_device_to_user_distance (<a href="#cairo_t">cairo_t</a> *cr, double *dx, double *dy);
+[Lua] <du>[WARN] dx, dy =</du> cairo.device_to_user_distance(<lud>cr</lud>, dx, dy)
+</pre></li>
+
+</ul>
+
+<h2><a name="path_creation_functions">Path creation functions</a></h2>
+
+<ul>
+
+<li><pre>
+[C]   void cairo_new_path (<a href="#cairo_t">cairo_t</a> *cr);
+[Lua] cairo.new_path(<lud>cr</lud>)
+</pre></li>
+
+<li><pre>
+[C]   void cairo_move_to (<a href="#cairo_t">cairo_t</a> *cr, double x, double y);
+[Lua] cairo.move_to(<lud>cr</lud>, x, y)
+</pre></li>
+
+<li><pre>
+[C]   void cairo_new_sub_path (<a href="#cairo_t">cairo_t</a> *cr);
+[Lua] cairo.new_sub_path(<lud>cr</lud>)
+</pre></li>
+
+<li><pre>
+[C]   void cairo_line_to (<a href="#cairo_t">cairo_t</a> *cr, double x, double y);
+[Lua] cairo.line_to(<lud>cr</lud>, x, y)
+</pre></li>
+
+<li><pre>
+[C]   void cairo_curve_to (<a href="#cairo_t">cairo_t</a> *cr, double x1, double y1, double x2, double y2, double x3, double y3);
+[Lua] cairo.curve_to(<lud>cr</lud>, x1, y1, x2, y2, x3, y3)
+</pre></li>
+
+<li><pre>
+[C]   void cairo_arc (<a href="#cairo_t">cairo_t</a> *cr, double xc, double yc, double radius, double angle1, double angle2);
+[Lua] cairo.arc(<lud>cr</lud>, xc, yc, radius, angle1, angle2)
+</pre></li>
+
+<li><pre>
+[C]   void cairo_arc_negative (<a href="#cairo_t">cairo_t</a> *cr, double xc, double yc, double radius, double angle1, double angle2);
+[Lua] cairo.arc_negative(<lud>cr</lud>, xc, yc, radius, angle1, angle2)
+</pre></li>
+
+<li><pre>
+[C]   void cairo_rel_move_to (<a href="#cairo_t">cairo_t</a> *cr, double dx, double dy);
+[Lua] cairo.rel_move_to(<lud>cr</lud>, dx, dy)
+</pre></li>
+
+<li><pre>
+[C]   void cairo_rel_line_to (<a href="#cairo_t">cairo_t</a> *cr, double dx, double dy);
+[Lua] cairo.rel_line_to(<lud>cr</lud>, dx, dy)
+</pre></li>
+
+<li><pre>
+[C]   void cairo_rel_curve_to (<a href="#cairo_t">cairo_t</a> *cr, double dx1, double dy1, double dx2, double dy2, double dx3, double dy3);
+[Lua] cairo.rel_curve_to(<lud>cr</lud>, dx1, dy1, dx2, dy2, dx3, dy3)
+</pre></li>
+
+<li><pre>
+[C]   void cairo_rectangle (<a href="#cairo_t">cairo_t</a> *cr, double x, double y, double width, double height);
+[Lua] cairo.rectangle(<lud>cr</lud>, x, y, width, height)
+</pre></li>
+
+<li><pre>
+[C]   void cairo_close_path (<a href="#cairo_t">cairo_t</a> *cr);
+[Lua] cairo.close_path(<lud>cr</lud>)
+</pre></li>
+
+<li><pre>
+Cairo-1.6
+[C]   void cairo_path_extents (<a href="#cairo_t">cairo_t</a> *cr, double *x1, double *y1, double *x2, double *y2);
+[Lua] <du>[WARN] x1, y1, x2, y2 =</du> cairo.path_extents(<lud>cr</lud><op>, x1, y1, x2, y2</op>)
+</pre></li>
+
+</ul>
+
+<h2><a name="painting_functions">Painting functions</a></h2>
+
+<ul>
+
+<li><pre>
+[C]   void cairo_paint (<a href="#cairo_t">cairo_t</a> *cr);
+[Lua] cairo.paint(<lud>cr</lud>)
+</pre></li>
+
+<li><pre>
+[C]   void cairo_paint_with_alpha (<a href="#cairo_t">cairo_t</a> *cr, double alpha);
+[Lua] cairo.paint_with_alpha(<lud>cr</lud>, alpha)
+</pre></li>
+
+<li><pre>
+[C]   void cairo_mask (<a href="#cairo_t">cairo_t</a> *cr, <a href="#cairo_pattern_t">cairo_pattern_t</a> *pattern);
+[Lua] cairo.mask(<lud>cr</lud>, <lud>pattern</lud>)
+</pre></li>
+
+<li><pre>
+[C]   void cairo_mask_surface (<a href="#cairo_t">cairo_t</a> *cr, <a href="#cairo_surface_t">cairo_surface_t</a> *surface, double surface_x, double surface_y);
+[Lua] cairo.mask_surface(<lud>cr</lud>, <lud>surface</lud>, surface_x, surface_y)
+</pre></li>
+
+<li><pre>
+[C]   void cairo_stroke (<a href="#cairo_t">cairo_t</a> *cr);
+[Lua] cairo.stroke(<lud>cr</lud>)
+</pre></li>
+
+<li><pre>
+[C]   void cairo_stroke_preserve (<a href="#cairo_t">cairo_t</a> *cr);
+[Lua] cairo.stroke_preserve(<lud>cr</lud>)
+</pre></li>
+
+<li><pre>
+[C]   void cairo_fill (<a href="#cairo_t">cairo_t</a> *cr);
+[Lua] cairo.fill(<lud>cr</lud>)
+</pre></li>
+
+<li><pre>
+[C]   void cairo_fill_preserve (<a href="#cairo_t">cairo_t</a> *cr);
+[Lua] cairo.fill_preserve(<lud>cr</lud>)
+</pre></li>
+
+<li><pre>
+[C]   void cairo_copy_page (<a href="#cairo_t">cairo_t</a> *cr);
+[Lua] cairo.copy_page(<lud>cr</lud>)
+</pre></li>
+
+<li><pre>
+[C]   void cairo_show_page (<a href="#cairo_t">cairo_t</a> *cr);
+[Lua] cairo.show_page(<lud>cr</lud>)
+</pre></li>
+
+<li><pre>
+[C]   <a href="#cairo_bool_t">cairo_bool_t</a> cairo_in_stroke (<a href="#cairo_t">cairo_t</a> *cr, double x, double y);
+[Lua] bool = cairo.in_stroke(<lud>cr</lud>, x, y)
+</pre></li>
+
+<li><pre>
+[C]   <a href="#cairo_bool_t">cairo_bool_t</a> cairo_in_fill (<a href="#cairo_t">cairo_t</a> *cr, double x, double y);
+[Lua] bool = cairo.in_fill(<lud>cr</lud>, x, y)
+</pre></li>
+
+<li><pre>
+[C]   <a href="#cairo_bool_t">cairo_bool_t</a> cairo_in_clip (<a href="#cairo_t">cairo_t</a> *cr, double x, double y);
+[Lua] bool = cairo.in_clip(<lud>cr</lud>, x, y)
+</pre></li>
+
+<li><pre>
+[C]   void cairo_stroke_extents (<a href="#cairo_t">cairo_t</a> *cr, double *x1, double *y1, double *x2, double *y2);
+[Lua] <du>[WARN] x1, y1, x2, y2 =</du> cairo.stroke_extents(<lud>cr</lud><op>, x1, y1, x2, y2</op>)
+</pre></li>
+
+<li><pre>
+[C]   void cairo_fill_extents (<a href="#cairo_t">cairo_t</a> *cr, double *x1, double *y1, double *x2, double *y2);
+[Lua] <du>[WARN] x1, y1, x2, y2 =</du> cairo.fill_extents(<lud>cr</lud><op>, x1, y1, x2, y2</op>)
+</pre></li>
+
+<li><pre>
+[C]   void cairo_reset_clip (<a href="#cairo_t">cairo_t</a> *cr);
+[Lua] cairo.reset_clip(<lud>cr</lud>)
+</pre></li>
+
+<li><pre>
+[C]   void cairo_clip (<a href="#cairo_t">cairo_t</a> *cr);
+[Lua] cairo.clip(<lud>cr</lud>)
+</pre></li>
+
+<li><pre>
+[C]   void cairo_clip_preserve (<a href="#cairo_t">cairo_t</a> *cr);
+[Lua] cairo.clip_preserve(<lud>cr</lud>)
+</pre></li>
+
+<li><pre>
+[C]   void cairo_clip_extents (<a href="#cairo_t">cairo_t</a> *cr, double *x1, double *y1, double *x2, double *y2);
+[Lua] <du>[WARN] x1, y1, x2, y2 =</du> cairo.clip_extents(<lud>cr</lud><op>, x1, y1, x2, y2</op>)
+</pre></li>
+
+<li><pre>
+[C]   <a href="#cairo_rectangle_list_t">cairo_rectangle_list_t</a> * cairo_copy_clip_rectangle_list (<a href="#cairo_t">cairo_t</a> *cr);
+[Lua] <lud>rectangle_list</lud> = cairo.copy_clip_rectangle_list(<lud>cr</lud>)
+</pre></li>
+
+<li><pre>
+[C]   void cairo_rectangle_list_destroy (<a href="#cairo_rectangle_list_t">cairo_rectangle_list_t</a> *rectangle_list);
+[Lua] cairo.rectangle_list_destroy(<lud>rectangle_list</lud>)
+</pre></li>
+
+</ul>
+
+<h2><a name="font_text_functions">Font/Text functions</a></h2>
+
+<ul>
+
+<li><pre>
+Cairo-1.8
+[C]   <a href="#cairo_glyph_t">cairo_glyph_t</a> * cairo_glyph_allocate (int num_glyphs);
+[Lua] <ni>not implemented</ni>
+</pre></li>
+
+<li><pre>
+Cairo-1.8
+[C]   void cairo_glyph_free (<a href="#cairo_glyph_t">cairo_glyph_t</a> *glyphs);
+[Lua] <ni>not implemented</ni>
+</pre></li>
+
+<li><pre>
+Cairo-1.8
+[C]   <a href="#cairo_text_cluster_t">cairo_text_cluster_t</a> * cairo_text_cluster_allocate (int num_clusters);
+[Lua] <ni>not implemented</ni>
+</pre></li>
+
+<li><pre>
+Cairo-1.8
+[C]   void cairo_text_cluster_free (<a href="#cairo_text_cluster_t">cairo_text_cluster_t</a> *clusters);
+[Lua] <ni>not implemented</ni>
+</pre></li>
+
+<li><pre>
+[C]   <a href="#cairo_font_options_t">cairo_font_options_t</a> * cairo_font_options_create (void);
+[Lua] <lud>options</lud> = cairo.font_options_create()
+</pre></li>
+
+<li><pre>
+[C]   <a href="#cairo_font_options_t">cairo_font_options_t</a> * cairo_font_options_copy (const <a href="#cairo_font_options_t">cairo_font_options_t</a> *original);
+[Lua] <lud>options</lud> = cairo.font_options_copy(<lud>original</lud>)
+</pre></li>
+
+<li><pre>
+[C]   void cairo_font_options_destroy (<a href="#cairo_font_options_t">cairo_font_options_t</a> *options);
+[Lua] cairo.font_options_destroy(<lud>options</lud>)
+</pre></li>
+
+<li><pre>
+[C]   <a href="#cairo_status_t">cairo_status_t</a> cairo_font_options_status (<a href="#cairo_font_options_t">cairo_font_options_t</a> *options);
+[Lua] status = cairo.font_options_status(<lud>options</lud>)
+</pre></li>
+
+<li><pre>
+[C]   void cairo_font_options_merge (<a href="#cairo_font_options_t">cairo_font_options_t</a> *options, const <a href="#cairo_font_options_t">cairo_font_options_t</a> *other);
+[Lua] cairo.font_options_merge(<lud>options</lud>, <lud>other</lud>)
+</pre></li>
+
+<li><pre>
+[C]   <a href="#cairo_bool_t">cairo_bool_t</a> cairo_font_options_equal (const <a href="#cairo_font_options_t">cairo_font_options_t</a> *options, const <a href="#cairo_font_options_t">cairo_font_options_t</a> *other);
+[Lua] bool = cairo.font_options_equal(<lud>options</lud>, <lud>other</lud>)
+</pre></li>
+
+<li><pre>
+[C]   unsigned long cairo_font_options_hash (const <a href="#cairo_font_options_t">cairo_font_options_t</a> *options);
+[Lua] num = cairo.font_options_hash(<lud>options</lud>)
+</pre></li>
+
+<li><pre>
+[C]   void cairo_font_options_set_antialias (<a href="#cairo_font_options_t">cairo_font_options_t</a> *options, <a href="#cairo_antialias_t">cairo_antialias_t</a> antialias);
+[Lua] cairo.font_options_set_antialias(<lud>options</lud>, antialias)
+</pre></li>
+
+<li><pre>
+[C]   <a href="#cairo_antialias_t">cairo_antialias_t</a> cairo_font_options_get_antialias (const <a href="#cairo_font_options_t">cairo_font_options_t</a> *options);
+[Lua] int = cairo.font_options_get_antialias(<lud>options</lud>)
+</pre></li>
+
+<li><pre>
+[C]   void cairo_font_options_set_subpixel_order (<a href="#cairo_font_options_t">cairo_font_options_t</a> *options, <a href="#cairo_subpixel_order_t">cairo_subpixel_order_t</a> subpixel_order);
+[Lua] cairo.font_options_set_subpixel_order(<lud>options</lud>, subpixel_order)
+</pre></li>
+
+<li><pre>
+[C]   <a href="#cairo_subpixel_order_t">cairo_subpixel_order_t</a> cairo_font_options_get_subpixel_order (const <a href="#cairo_font_options_t">cairo_font_options_t</a> *options);
+[Lua] int = cairo.font_options_get_subpixel_order(<lud>options</lud>)
+</pre></li>
+
+<li><pre>
+[C]   void cairo_font_options_set_hint_style (<a href="#cairo_font_options_t">cairo_font_options_t</a> *options, <a href="#cairo_hint_style_t">cairo_hint_style_t</a> hint_style);
+[Lua] cairo.font_options_set_hint_style(<lud>options</lud>, hint_style)
+</pre></li>
+
+<li><pre>
+[C]   <a href="#cairo_hint_style_t">cairo_hint_style_t</a> cairo_font_options_get_hint_style (const <a href="#cairo_font_options_t">cairo_font_options_t</a> *options);
+[Lua] int = cairo_font_options_get_hint_style(<lud>options</lud>)
+</pre></li>
+
+<li><pre>
+[C]   void cairo_font_options_set_hint_metrics (<a href="#cairo_font_options_t">cairo_font_options_t</a> *options, <a href="#cairo_hint_metrics_t">cairo_hint_metrics_t</a> hint_metrics);
+[Lua] cairo.font_options_set_hint_metrics(<lud>options</lud>, hint_metrics)
+</pre></li>
+
+<li><pre>
+[C]   <a href="#cairo_hint_metrics_t">cairo_hint_metrics_t</a> cairo_font_options_get_hint_metrics (const <a href="#cairo_font_options_t">cairo_font_options_t</a> *options);
+[Lua] int = cairo.font_options_get_hint_metrics(<lud>options</lud>)
+</pre></li>
+
+<li><pre>
+[C]   void cairo_select_font_face (<a href="#cairo_t">cairo_t</a> *cr, const char *family, <a href="#cairo_font_slant_t">cairo_font_slant_t</a> slant, <a href="#cairo_font_weight_t">cairo_font_weight_t</a> weight);
+[Lua] cairo.select_font_face(<lud>cr</lud>, family, slant, weight)
+</pre></li>
+
+<li><pre>
+[C]   void cairo_set_font_size (<a href="#cairo_t">cairo_t</a> *cr, double size);
+[Lua] cairo.set_font_size(<lud>cr</lud>, size)
+</pre></li>
+
+<li><pre>
+[C]   void cairo_set_font_matrix (<a href="#cairo_t">cairo_t</a> *cr, const <a href="#cairo_matrix_t">cairo_matrix_t</a> *matrix);
+[Lua] cairo.set_font_matrix(<lud>cr</lud>, <ud>matrix</ud>)
+</pre></li>
+
+<li><pre>
+[C]   void cairo_get_font_matrix (<a href="#cairo_t">cairo_t</a> *cr, <a href="#cairo_matrix_t">cairo_matrix_t</a> *matrix);
+[Lua] cairo.get_font_matrix(<lud>cr</lud>, <ud>matrix</ud>)
+</pre></li>
+
+<li><pre>
+[C]   void cairo_set_font_options (<a href="#cairo_t">cairo_t</a> *cr, const <a href="#cairo_font_options_t">cairo_font_options_t</a> *options);
+[Lua] cairo.set_font_options(<lud>cr</lud>, <lud>options</lud>)
+</pre></li>
+
+<li><pre>
+[C]   void cairo_get_font_options (<a href="#cairo_t">cairo_t</a> *cr, <a href="#cairo_font_options_t">cairo_font_options_t</a> *options);
+[Lua] cairo.get_font_options(<lud>cr</lud>, <lud>options</lud>)
+</pre></li>
+
+<li><pre>
+[C]   void cairo_set_font_face (<a href="#cairo_t">cairo_t</a> *cr, <a href="#cairo_font_face_t">cairo_font_face_t</a> *font_face);
+[Lua] cairo.set_font_face(<lud>cr</lud>, <lud>font_face</lud>)
+</pre></li>
+
+<li><pre>
+[C]   <a href="#cairo_font_face_t">cairo_font_face_t</a> * cairo_get_font_face (<a href="#cairo_t">cairo_t</a> *cr);
+[Lua] <lud>font_face</lud> = cairo.get_font_face(<lud>cr</lud>)
+</pre></li>
+
+<li><pre>
+[C]   void cairo_set_scaled_font (<a href="#cairo_t">cairo_t</a> *cr, const <a href="#cairo_scaled_font_t">cairo_scaled_font_t</a> *scaled_font);
+[Lua] cairo.set_scaled_font(<lud>cr</lud>, <lud>scaled_font</lud>)
+</pre></li>
+
+<li><pre>
+[C]   <a href="#cairo_scaled_font_t">cairo_scaled_font_t</a> * cairo_get_scaled_font (<a href="#cairo_t">cairo_t</a> *cr);
+[Lua] <lud>scaled_font</lud> = cairo.get_scaled_font(<lud>cr</lud>)
+</pre></li>
+
+<li><pre>
+[C]   void cairo_show_text (<a href="#cairo_t">cairo_t</a> *cr, const char *utf8);
+[Lua] cairo.show_text(<lud>cr</lud>, utf8)
+</pre></li>
+
+<li><pre>
+[C]   void cairo_show_glyphs (<a href="#cairo_t">cairo_t</a> *cr, const <a href="#cairo_glyph_t">cairo_glyph_t</a> *glyphs, int num_glyphs);
+[Lua] <ni>not implemented</ni>
+</pre></li>
+
+<li><pre>
+Cairo-1.8
+[C]   void cairo_show_text_glyphs (<a href="#cairo_t">cairo_t</a> *cr, const char *utf8, int utf8_len, const <a href="#cairo_glyph_t">cairo_glyph_t</a> *glyphs, int num_glyphs, const <a href="#cairo_text_cluster_t">cairo_text_cluster_t</a> *clusters, int num_clusters, <a href="#cairo_text_cluster_flags_t">cairo_text_cluster_flags_t</a> cluster_flags);
+[Lua] <ni>not implemented</ni>
+</pre></li>
+
+<li><pre>
+[C]   void cairo_text_path (<a href="#cairo_t">cairo_t</a> *cr, const char *utf8);
+[Lua] cairo.text_path(<lud>cr</lud>, utf8)
+</pre></li>
+
+<li><pre>
+[C]   void cairo_glyph_path (<a href="#cairo_t">cairo_t</a> *cr, const <a href="#cairo_glyph_t">cairo_glyph_t</a> *glyphs, int num_glyphs);
+[Lua] <ni>not implemented</ni>
+</pre></li>
+
+<li><pre>
+[C]   void cairo_text_extents (<a href="#cairo_t">cairo_t</a> *cr, const char *utf8, <a href="#cairo_text_extents_t">cairo_text_extents_t</a> *extents);
+[Lua] cairo.text_extents(<lud>cr</lud>, utf8, <ud>extents</ud>)
+</pre></li>
+
+<li><pre>
+[C]   void cairo_glyph_extents (<a href="#cairo_t">cairo_t</a> *cr, const <a href="#cairo_glyph_t">cairo_glyph_t</a> *glyphs, int num_glyphs, <a href="#cairo_text_extents_t">cairo_text_extents_t</a> *extents);
+[Lua] <ni>not implemented</ni>
+</pre></li>
+
+<li><pre>
+[C]   void cairo_font_extents (<a href="#cairo_t">cairo_t</a> *cr, <a href="#cairo_font_extents_t">cairo_font_extents_t</a> *extents);
+[Lua] cairo.font_extents(<lud>cr</lud>, <ud>extents</ud>)
+</pre></li>
+
+<li><pre>
+[C]   <a href="#cairo_font_face_t">cairo_font_face_t</a> * cairo_font_face_reference (<a href="#cairo_font_face_t">cairo_font_face_t</a> *font_face);
+[Lua] <lud>ref</lud> = cairo.font_face_reference(<lud>font_face</lud>)
+</pre></li>
+
+<li><pre>
+[C]   void cairo_font_face_destroy (<a href="#cairo_font_face_t">cairo_font_face_t</a> *font_face);
+[Lua] cairo.font_face_destroy(<lud>font_face</lud>)
+</pre></li>
+
+<li><pre>
+[C]   unsigned int cairo_font_face_get_reference_count (<a href="#cairo_font_face_t">cairo_font_face_t</a> *font_face);
+[Lua] num = cairo.font_face_get_reference_count(<lud>font_face</lud>)
+</pre></li>
+
+<li><pre>
+[C]   <a href="#cairo_status_t">cairo_status_t</a> cairo_font_face_status (<a href="#cairo_font_face_t">cairo_font_face_t</a> *font_face);
+[Lua] int = cairo.font_face_status(<lud>font_face</lud>)
+</pre></li>
+
+<li><pre>
+[C]   <a href="#cairo_font_type_t">cairo_font_type_t</a> cairo_font_face_get_type (<a href="#cairo_font_face_t">cairo_font_face_t</a> *font_face);
+[Lua] int = cairo.font_face_get_type(<lud>font_face</lud>)
+</pre></li>
+
+<li><pre>
+[C]   void * cairo_font_face_get_user_data (<a href="#cairo_font_face_t">cairo_font_face_t</a> *font_face, const <a href="#cairo_user_data_key_t">cairo_user_data_key_t</a> *key);
+[Lua] <ni>not implemented</ni>
+</pre></li>
+
+<li><pre>
+[C]   <a href="#cairo_status_t">cairo_status_t</a> cairo_font_face_set_user_data (<a href="#cairo_font_face_t">cairo_font_face_t</a> *font_face, const <a href="#cairo_user_data_key_t">cairo_user_data_key_t</a> *key, void *user_data, <a href="#cairo_destroy_func_t">cairo_destroy_func_t</a> destroy);
+[Lua] <ni>not implemented</ni>
+</pre></li>
+
+<li><pre>
+[C]   <a href="#cairo_scaled_font_t">cairo_scaled_font_t</a> * cairo_scaled_font_create (<a href="#cairo_font_face_t">cairo_font_face_t</a> *font_face, const <a href="#cairo_matrix_t">cairo_matrix_t</a> *font_matrix, const <a href="#cairo_matrix_t">cairo_matrix_t</a> *ctm, const <a href="#cairo_font_options_t">cairo_font_options_t</a> *options);
+[Lua] <lud>scaled_font</lud> = cairo.scaled_font_create(<lud>font_face</lud>, <ud>font_matrix</ud>, <ud>ctm</ud>, <lud>options</lud>)
+</pre></li>
+
+<li><pre>
+[C]   <a href="#cairo_scaled_font_t">cairo_scaled_font_t</a> * cairo_scaled_font_reference (<a href="#cairo_scaled_font_t">cairo_scaled_font_t</a> *scaled_font);
+[Lua] <lud>ref</lud> = cairo.scaled_font_reference(<lud>scaled_font</lud>)
+</pre></li>
+
+<li><pre>
+[C]   void cairo_scaled_font_destroy (<a href="#cairo_scaled_font_t">cairo_scaled_font_t</a> *scaled_font);
+[Lua] cairo.scaled_font_destroy(<lud>scaled_font</lud>)
+</pre></li>
+
+<li><pre>
+[C]   unsigned int cairo_scaled_font_get_reference_count (<a href="#cairo_scaled_font_t">cairo_scaled_font_t</a> *scaled_font);
+[Lua] num = cairo.scaled_font_get_reference_count(<lud>scaled_font</lud>)
+</pre></li>
+
+<li><pre>
+[C]   <a href="#cairo_status_t">cairo_status_t</a> cairo_scaled_font_status (<a href="#cairo_scaled_font_t">cairo_scaled_font_t</a> *scaled_font);
+[Lua] int = cairo.scaled_font_status(<lud>scaled_font</lud>)
+</pre></li>
+
+<li><pre>
+[C]   <a href="#cairo_font_type_t">cairo_font_type_t</a> cairo_scaled_font_get_type (<a href="#cairo_scaled_font_t">cairo_scaled_font_t</a> *scaled_font);
+[Lua] int = cairo.scaled_font_get_type(<lud>scaled_font</lud>)
+</pre></li>
+
+<li><pre>
+[C]   void * cairo_scaled_font_get_user_data (<a href="#cairo_scaled_font_t">cairo_scaled_font_t</a> *scaled_font, const <a href="#cairo_user_data_key_t">cairo_user_data_key_t</a> *key);
+[Lua] <ni>not implemented</ni>
+</pre></li>
+
+<li><pre>
+[C]   <a href="#cairo_status_t">cairo_status_t</a> cairo_scaled_font_set_user_data (<a href="#cairo_scaled_font_t">cairo_scaled_font_t</a> *scaled_font, const <a href="#cairo_user_data_key_t">cairo_user_data_key_t</a> *key, void *user_data, <a href="#cairo_destroy_func_t">cairo_destroy_func_t</a> destroy);
+[Lua] <ni>not implemented</ni>
+</pre></li>
+
+<li><pre>
+[C]   void cairo_scaled_font_extents (<a href="#cairo_scaled_font_t">cairo_scaled_font_t</a>  *scaled_font, <a href="#cairo_font_extents_t">cairo_font_extents_t</a> *extents);
+[Lua] cairo.scaled_font_extents(<lud>scaled_font</lud>, <ud>extents</ud>)
+</pre></li>
+
+<li><pre>
+[C]   void cairo_scaled_font_text_extents (<a href="#cairo_scaled_font_t">cairo_scaled_font_t</a> *scaled_font, const char *utf8, <a href="#cairo_text_extents_t">cairo_text_extents_t</a> *extents);
+[Lua] cairo.scaled_font_text_extents(<lud>scaled_font</lud>, utf8, <ud>extents</ud>)
+</pre></li>
+
+<li><pre>
+[C]   void cairo_scaled_font_glyph_extents (<a href="#cairo_scaled_font_t">cairo_scaled_font_t</a> *scaled_font, const <a href="#cairo_glyph_t">cairo_glyph_t</a> *glyphs, int num_glyphs, <a href="#cairo_text_extents_t">cairo_text_extents_t</a> *extents);
+[Lua] <ni>not implemented</ni>
+</pre></li>
+
+<li><pre>
+Cairo-1.8
+[C]   <a href="#cairo_status_t">cairo_status_t</a> cairo_scaled_font_text_to_glyphs (<a href="#cairo_scaled_font_t">cairo_scaled_font_t</a> *scaled_font, double x, double y, const char *utf8, int utf8_len, <a href="#cairo_glyph_t">cairo_glyph_t</a> **glyphs, int *num_glyphs, <a href="#cairo_text_cluster_t">cairo_text_cluster_t</a> **clusters, int *num_clusters, <a href="#cairo_text_cluster_flags_t">cairo_text_cluster_flags_t</a> *cluster_flags);
+[Lua] <ni>not implemented</ni>
+</pre></li>
+
+<li><pre>
+[C]   <a href="#cairo_font_face_t">cairo_font_face_t</a> * cairo_scaled_font_get_font_face (<a href="#cairo_scaled_font_t">cairo_scaled_font_t</a> *scaled_font);
+[Lua] <lud>font_face</lud> = cairo.scaled_font_get_font_face(<lud>scaled_font</lud>)
+</pre></li>
+
+<li><pre>
+[C]   void cairo_scaled_font_get_font_matrix (<a href="#cairo_scaled_font_t">cairo_scaled_font_t</a> *scaled_font, <a href="#cairo_matrix_t">cairo_matrix_t</a> *font_matrix);
+[Lua] cairo.scaled_font_get_font_matrix(<lud>scaled_font</lud>, <ud>font_matrix</ud>)
+</pre></li>
+
+<li><pre>
+[C]   void cairo_scaled_font_get_ctm (<a href="#cairo_scaled_font_t">cairo_scaled_font_t</a> *scaled_font, <a href="#cairo_matrix_t">cairo_matrix_t</a> *ctm);
+[Lua] cairo.scaled_font_get_ctm(<lud>scaled_font</lud>, <ud>ctm</ud>)
+</pre></li>
+
+<li><pre>
+Cairo-1.8
+[C]   void cairo_scaled_font_get_scale_matrix (<a href="#cairo_scaled_font_t">cairo_scaled_font_t</a> *scaled_font, <a href="#cairo_matrix_t">cairo_matrix_t</a> *scale_matrix);
+[Lua] <ni>not implemented</ni>
+</pre></li>
+
+<li><pre>
+[C]   void cairo_scaled_font_get_font_options (<a href="#cairo_scaled_font_t">cairo_scaled_font_t</a> *scaled_font, <a href="#cairo_font_options_t">cairo_font_options_t</a> *options);
+[Lua] cairo.scaled_font_get_font_options(<lud>scaled_font</lud>, <lud>options</lud>)
+</pre></li>
+
+<li><pre>
+Cairo-1.8
+[C]   <a href="#cairo_font_face_t">cairo_font_face_t</a> * cairo_toy_font_face_create (const char *family, <a href="#cairo_font_slant_t">cairo_font_slant_t</a> slant, <a href="#cairo_font_weight_t">cairo_font_weight_t</a> weight);
+[Lua] <ni>not implemented</ni>
+</pre></li>
+
+<li><pre>
+Cairo-1.8
+[C]   const char * cairo_toy_font_face_get_family (<a href="#cairo_font_face_t">cairo_font_face_t</a> *font_face);
+[Lua] <ni>not implemented</ni>
+</pre></li>
+
+<li><pre>
+Cairo-1.8
+[C]   <a href="#cairo_font_slant_t">cairo_font_slant_t</a> cairo_toy_font_face_get_slant (<a href="#cairo_font_face_t">cairo_font_face_t</a> *font_face);
+[Lua] <ni>not implemented</ni>
+</pre></li>
+
+<li><pre>
+Cairo-1.8
+[C]   <a href="#cairo_font_weight_t">cairo_font_weight_t</a> cairo_toy_font_face_get_weight (<a href="#cairo_font_face_t">cairo_font_face_t</a> *font_face);
+[Lua] <ni>not implemented</ni>
+</pre></li>
+
+<li><pre>
+Cairo-1.8
+[C]   <a href="#cairo_font_face_t">cairo_font_face_t</a> * cairo_user_font_face_create (void);
+[Lua] <ni>not implemented</ni>
+</pre></li>
+
+<li><pre>
+Cairo-1.8
+[C]   void cairo_user_font_face_set_init_func (<a href="#cairo_font_face_t">cairo_font_face_t</a> *font_face, <a href="#cairo_user_scaled_font_init_func_t">cairo_user_scaled_font_init_func_t</a> init_func);
+[Lua] <ni>not implemented</ni>
+</pre></li>
+
+<li><pre>
+Cairo-1.8
+[C]   void cairo_user_font_face_set_render_glyph_func (<a href="#cairo_font_face_t">cairo_font_face_t</a> *font_face, <a href="#cairo_user_scaled_font_render_glyph_func_t">cairo_user_scaled_font_render_glyph_func_t</a> render_glyph_func);
+[Lua] <ni>not implemented</ni>
+</pre></li>
+
+<li><pre>
+Cairo-1.8
+[C]   void cairo_user_font_face_set_text_to_glyphs_func (<a href="#cairo_font_face_t">cairo_font_face_t</a> *font_face, <a href="#cairo_user_scaled_font_text_to_glyphs_func_t">cairo_user_scaled_font_text_to_glyphs_func_t</a> text_to_glyphs_func);
+[Lua] <ni>not implemented</ni>
+</pre></li>
+
+<li><pre>
+Cairo-1.8
+[C]   void cairo_user_font_face_set_unicode_to_glyph_func (<a href="#cairo_font_face_t">cairo_font_face_t</a> *font_face, <a href="#cairo_user_scaled_font_unicode_to_glyph_func_t">cairo_user_scaled_font_unicode_to_glyph_func_t</a> unicode_to_glyph_func);
+[Lua] <ni>not implemented</ni>
+</pre></li>
+
+<li><pre>
+Cairo-1.8
+[C]   <a href="#cairo_user_scaled_font_init_func_t">cairo_user_scaled_font_init_func_t</a> cairo_user_font_face_get_init_func (<a href="#cairo_font_face_t">cairo_font_face_t</a> *font_face);
+[Lua] <ni>not implemented</ni>
+</pre></li>
+
+<li><pre>
+Cairo-1.8
+[C]   <a href="#cairo_user_scaled_font_render_glyph_func_t">cairo_user_scaled_font_render_glyph_func_t</a> cairo_user_font_face_get_render_glyph_func (<a href="#cairo_font_face_t">cairo_font_face_t</a> *font_face);
+[Lua] <ni>not implemented</ni>
+</pre></li>
+
+<li><pre>
+Cairo-1.8
+[C]   <a href="#cairo_user_scaled_font_text_to_glyphs_func_t">cairo_user_scaled_font_text_to_glyphs_func_t</a> cairo_user_font_face_get_text_to_glyphs_func (<a href="#cairo_font_face_t">cairo_font_face_t</a> *font_face);
+[Lua] <ni>not implemented</ni>
+</pre></li>
+
+<li><pre>
+Cairo-1.8
+[C]   <a href="#cairo_user_scaled_font_unicode_to_glyph_func_t">cairo_user_scaled_font_unicode_to_glyph_func_t</a> cairo_user_font_face_get_unicode_to_glyph_func (<a href="#cairo_font_face_t">cairo_font_face_t</a> *font_face);
+[Lua] <ni>not implemented</ni>
+</pre></li>
+
+</ul>
+
+<h2><a name="query_functions">Query functions</a></h2>
+
+<ul>
+
+<li><pre>
+[C]   <a href="#cairo_operator_t">cairo_operator_t</a> cairo_get_operator (<a href="#cairo_t">cairo_t</a> *cr);
+[Lua] int = cairo.get_operator(<lud>cr</lud>)
+</pre></li>
+
+<li><pre>
+[C]   <a href="#cairo_pattern_t">cairo_pattern_t</a> * cairo_get_source (<a href="#cairo_t">cairo_t</a> *cr);
+[Lua] <lud>pat</lud> = cairo.get_source(<lud>cr</lud>)
+</pre></li>
+
+<li><pre>
+[C]   double cairo_get_tolerance (<a href="#cairo_t">cairo_t</a> *cr);
+[Lua] num = cairo.get_tolerance(<lud>cr</lud>)
+</pre></li>
+
+<li><pre>
+[C]   <a href="#cairo_antialias_t">cairo_antialias_t</a> cairo_get_antialias (<a href="#cairo_t">cairo_t</a> *cr);
+[Lua] int = cairo.get_antialias(<lud>cr</lud>)
+</pre></li>
+
+<li><pre>
+Cairo-1.6
+[C]   cairo_bool_t cairo_has_current_point (cairo_t *cr);
+[Lua] bool = cairo.has_current_point(<lud>cr</lud>)
+</pre></li>
+
+<li><pre>
+[C]   void cairo_get_current_point (<a href="#cairo_t">cairo_t</a> *cr, double *x, double *y);
+[Lua] <du>[WARN] x, y =</du> cairo.get_current_point(<lud>cr</lud><op>, x, y</op>)
+</pre></li>
+
+<li><pre>
+[C]   <a href="#cairo_fill_rule_t">cairo_fill_rule_t</a> cairo_get_fill_rule (<a href="#cairo_t">cairo_t</a> *cr);
+[Lua] int = cairo.get_fill_rule(<lud>cr</lud>)
+</pre></li>
+
+<li><pre>
+[C]   double cairo_get_line_width (<a href="#cairo_t">cairo_t</a> *cr);
+[Lua] num = cairo.get_line_width(<lud>cr</lud>)
+</pre></li>
+
+<li><pre>
+[C]   <a href="#cairo_line_cap_t">cairo_line_cap_t</a> cairo_get_line_cap (<a href="#cairo_t">cairo_t</a> *cr);
+[Lua] int = cairo.get_line_cap(<lud>cr</lud>)
+</pre></li>
+
+<li><pre>
+[C]   <a href="#cairo_line_join_t">cairo_line_join_t</a> cairo_get_line_join (<a href="#cairo_t">cairo_t</a> *cr);
+[Lua] int = cairo.get_line_join(<lud>cr</lud>)
+</pre></li>
+
+<li><pre>
+[C]   double cairo_get_miter_limit (<a href="#cairo_t">cairo_t</a> *cr);
+[Lua] num = cairo.get_miter_limit(<lud>cr</lud>)
+</pre></li>
+
+<li><pre>
+[C]   int cairo_get_dash_count (<a href="#cairo_t">cairo_t</a> *cr);
+[Lua] int = cairo.get_dash_count(<lud>cr</lud>)
+</pre></li>
+
+<li><pre>
+[C]   void cairo_get_dash (<a href="#cairo_t">cairo_t</a> *cr, double *dashes, double *offset);
+[Lua] <ni>not implemented</ni>
+</pre></li>
+
+<li><pre>
+[C]   void cairo_get_matrix (<a href="#cairo_t">cairo_t</a> *cr, <a href="#cairo_matrix_t">cairo_matrix_t</a> *matrix);
+[Lua] cairo.get_matrix(<lud>cr</lud>, <ud>matrix</ud>)
+</pre></li>
+
+<li><pre>
+[C]   <a href="#cairo_surface_t">cairo_surface_t</a> * cairo_get_target (<a href="#cairo_t">cairo_t</a> *cr);
+[Lua] <lud>target</lud> = cairo.get_target(<lud>cr</lud>)
+</pre></li>
+
+<li><pre>
+[C]   <a href="#cairo_surface_t">cairo_surface_t</a> * cairo_get_group_target (<a href="#cairo_t">cairo_t</a> *cr);
+[Lua] <lud>target</lud> = cairo.get_group_target(<lud>cr</lud>)
+</pre></li>
+
+<li><pre>
+[C]   <a href="#cairo_path_t">cairo_path_t</a> * cairo_copy_path (<a href="#cairo_t">cairo_t</a> *cr);
+[Lua] <lud>path</lud> = cairo.copy_path(<lud>cr</lud>)
+</pre></li>
+
+<li><pre>
+[C]   <a href="#cairo_path_t">cairo_path_t</a> * cairo_copy_path_flat (<a href="#cairo_t">cairo_t</a> *cr);
+[Lua] <lud>path</lud> = cairo.copy_path_flat(<lud>cr</lud>)
+</pre></li>
+
+<li><pre>
+[C]   void cairo_append_path (<a href="#cairo_t">cairo_t</a> *cr, const <a href="#cairo_path_t">cairo_path_t</a> *path);
+[Lua] cairo.append_path(<lud>cr</lud>, <lud>path</lud>)
+</pre></li>
+
+<li><pre>
+[C]   void cairo_path_destroy (<a href="#cairo_path_t">cairo_path_t</a> *path);
+[Lua] cairo.path_destroy(<lud>path</lud>)
+</pre></li>
+
+<li><pre>
+[C]   <a href="#cairo_status_t">cairo_status_t</a> cairo_status (<a href="#cairo_t">cairo_t</a> *cr);
+[Lua] int = cairo.status(<lud>cr</lud>)
+</pre></li>
+
+<li><pre>
+[C]   const char * cairo_status_to_string (<a href="#cairo_status_t">cairo_status_t</a> status);
+[Lua] str = cairo.status_to_string(status)
+</pre></li>
+
+<li><pre>
+[C]   <a href="#cairo_surface_t">cairo_surface_t</a> * cairo_surface_create_similar (<a href="#cairo_surface_t">cairo_surface_t</a> *other, <a href="#cairo_content_t">cairo_content_t</a> content, int width, int height);
+[Lua] <lud>surface</lud> = cairo.surface_create_similar(<lud>other</lud>, content, width, height)
+</pre></li>
+
+<li><pre>
+[C]   <a href="#cairo_surface_t">cairo_surface_t</a> * cairo_surface_reference (<a href="#cairo_surface_t">cairo_surface_t</a> *surface);
+[Lua] <lud>ref</lud> = cairo.surface_reference(<lud>surface</lud>)
+</pre></li>
+
+<li><pre>
+[C]   void cairo_surface_finish (<a href="#cairo_surface_t">cairo_surface_t</a> *surface);
+[Lua] cairo.surface_finish(<lud>surface</lud>)
+</pre></li>
+
+<li><pre>
+[C]   void cairo_surface_destroy (<a href="#cairo_surface_t">cairo_surface_t</a> *surface);
+[Lua] cairo.surface_destroy(<lud>surface</lud>)
+</pre></li>
+
+<li><pre>
+[C]   unsigned int cairo_surface_get_reference_count (<a href="#cairo_surface_t">cairo_surface_t</a> *surface);
+[Lua] num = cairo.surface_get_reference_count(<lud>surface</lud>)
+</pre></li>
+
+<li><pre>
+[C]   <a href="#cairo_status_t">cairo_status_t</a> cairo_surface_status (<a href="#cairo_surface_t">cairo_surface_t</a> *surface);
+[Lua] int = cairo.surface_status(<lud>surface</lud>)
+</pre></li>
+
+<li><pre>
+[C]   <a href="#cairo_surface_type_t">cairo_surface_type_t</a> cairo_surface_get_type (<a href="#cairo_surface_t">cairo_surface_t</a> *surface);
+[Lua] int = cairo.surface_get_type(<lud>surface</lud>)
+</pre></li>
+
+<li><pre>
+[C]   <a href="#cairo_content_t">cairo_content_t</a> cairo_surface_get_content (<a href="#cairo_surface_t">cairo_surface_t</a> *surface);
+[Lua] int = cairo.surface_get_content(<lud>surface</lud>)
+</pre></li>
+
+<li><pre>
+[C]   <a href="#cairo_status_t">cairo_status_t</a> cairo_surface_write_to_png (<a href="#cairo_surface_t">cairo_surface_t</a> *surface, const char *filename);
+[Lua] int = cairo.surface_write_to_png(<lud>surface</lud>, filename)
+</pre></li>
+
+<li><pre>
+[C]   <a href="#cairo_status_t">cairo_status_t</a> cairo_surface_write_to_png_stream (<a href="#cairo_surface_t">cairo_surface_t</a> *surface, <a href="#cairo_write_func_t">cairo_write_func_t</a> write_func, void *closure);
+[Lua] <ni>not implemented</ni>
+</pre></li>
+
+<li><pre>
+[C]   void * cairo_surface_get_user_data (<a href="#cairo_surface_t">cairo_surface_t</a> *surface, const <a href="#cairo_user_data_key_t">cairo_user_data_key_t</a> *key);
+[Lua] <ni>not implemented</ni>
+</pre></li>
+
+<li><pre>
+[C]   <a href="#cairo_status_t">cairo_status_t</a> cairo_surface_set_user_data (<a href="#cairo_surface_t">cairo_surface_t</a> *surface, const <a href="#cairo_user_data_key_t">cairo_user_data_key_t</a> *key, void *user_data, <a href="#cairo_destroy_func_t">cairo_destroy_func_t</a> destroy);
+[Lua] <ni>not implemented</ni>
+</pre></li>
+
+<li><pre>
+[C]   void cairo_surface_get_font_options (<a href="#cairo_surface_t">cairo_surface_t</a> *surface, <a href="#cairo_font_options_t">cairo_font_options_t</a> *options);
+[Lua] cairo.surface_get_font_options(<lud>surface</lud>, <lud>options</lud>)
+</pre></li>
+
+<li><pre>
+[C]   void cairo_surface_flush (<a href="#cairo_surface_t">cairo_surface_t</a> *surface);
+[Lua] cairo.surface_flush(<lud>surface</lud>)
+</pre></li>
+
+<li><pre>
+[C]   void cairo_surface_mark_dirty (<a href="#cairo_surface_t">cairo_surface_t</a> *surface);
+[Lua] cairo.surface_mark_dirty(<lud>surface</lud>)
+</pre></li>
+
+<li><pre>
+[C]   void cairo_surface_mark_dirty_rectangle (<a href="#cairo_surface_t">cairo_surface_t</a> *surface, int x, int y, int width, int height);
+[Lua] cairo.surface_mark_dirty_rectangle(<lud>surface</lud>, x, y, width, height)
+</pre></li>
+
+<li><pre>
+[C]   void cairo_surface_set_device_offset (<a href="#cairo_surface_t">cairo_surface_t</a> *surface, double x_offset, double y_offset);
+[Lua] cairo.surface_set_device_offset(<lud>surface</lud>, x_offset, y_offset)
+</pre></li>
+
+<li><pre>
+[C] void cairo_surface_get_device_offset (<a href="#cairo_surface_t">cairo_surface_t</a> *surface, double *x_offset, double *y_offset);
+[Lua] <du>[WARN] x_offset, y_offset =</du> cairo.surface_get_device_offset(<lud>surface</lud><op>, x_offset, y_offset</op>)
+</pre></li>
+
+<li><pre>
+[C]   void cairo_surface_set_fallback_resolution (<a href="#cairo_surface_t">cairo_surface_t</a> *surface, double x_pixels_per_inch, double y_pixels_per_inch);
+[Lua] cairo.surface_set_fallback_resolution(<lud>surface</lud>, x_pixels_per_inch, y_pixels_per_inch)
+</pre></li>
+
+<li><pre>
+Cairo-1.8
+[C]   void cairo_surface_get_fallback_resolution (<a href="#cairo_surface_t">cairo_surface_t</a> *surface, double *x_pixels_per_inch, double *y_pixels_per_inch);
+[Lua] <ni>not implemented</ni>
+</pre></li>
+
+<li><pre>
+Cairo-1.6
+[C]   void cairo_surface_copy_page (<a href="#cairo_surface_t">cairo_surface_t</a> *surface);
+[Lua] cairo.surface_copy_page(<lud>surface</lud>)
+</pre></li>
+
+<li><pre>
+Cairo-1.6
+[C]   void cairo_surface_show_page (<a href="#cairo_surface_t">cairo_surface_t</a> *surface);
+[Lua] cairo.surface_show_page(<lud>surface</lud>)
+</pre></li>
+
+<li><pre>
+Cairo-1.8
+[C]   <a href="#cairo_bool_t">cairo_bool_t</a> cairo_surface_has_show_text_glyphs (<a href="#cairo_surface_t">cairo_surface_t</a> *surface);
+[Lua] <ni>not implemented</ni>
+</pre></li>
+
+</ul>
+
+<h2><a name="image_surface">Image surface</a></h2>
+
+<ul>
+
+<li><pre>
+[C]   <a href="#cairo_surface_t">cairo_surface_t</a> * cairo_image_surface_create (<a href="#cairo_format_t">cairo_format_t</a> format, int width, int height);
+[Lua] <lud>surface</lud> = cairo.image_surface_create(format, width, height)
+</pre></li>
+
+<li><pre>
+Cairo-1.6
+[C]   int cairo_format_stride_for_width (<a href="#cairo_format_t">cairo_format_t</a> format, int width);
+[Lua] int = cairo.format_stride_for_width(format, width)
+</pre></li>
+
+<li><pre>
+[C]   <a href="#cairo_surface_t">cairo_surface_t</a> * cairo_image_surface_create_for_data (unsigned char *data, <a href="#cairo_format_t">cairo_format_t</a> format, int width, int height, int stride);
+[Lua] <ni>not implemented</ni>
+</pre></li>
+
+<li><pre>
+[C]   unsigned char * cairo_image_surface_get_data (<a href="#cairo_surface_t">cairo_surface_t</a> *surface);
+[Lua] str = cairo.image_surface_get_data(<lud>surface</lud>)
+</pre></li>
+
+<li><pre>
+[C]   <a href="#cairo_format_t">cairo_format_t</a> cairo_image_surface_get_format (<a href="#cairo_surface_t">cairo_surface_t</a> *surface);
+[Lua] int = cairo.image_surface_get_format(<lud>surface</lud>)
+</pre></li>
+
+<li><pre>
+[C]   int cairo_image_surface_get_width (<a href="#cairo_surface_t">cairo_surface_t</a> *surface);
+[Lua] int = cairo.image_surface_get_width(<lud>surface</lud>)
+</pre></li>
+
+<li><pre>
+[C]   int cairo_image_surface_get_height (<a href="#cairo_surface_t">cairo_surface_t</a> *surface);
+[Lua] int = cairo.image_surface_get_height(<lud>surface</lud>)
+</pre></li>
+
+<li><pre>
+[C]   int cairo_image_surface_get_stride (<a href="#cairo_surface_t">cairo_surface_t</a> *surface);
+[Lua] int = cairo.image_surface_get_stride(<lud>surface</lud>)
+</pre></li>
+
+<li><pre>
+[C]   <a href="#cairo_surface_t">cairo_surface_t</a> * cairo_image_surface_create_from_png (const char *filename);
+[Lua] <lud>surface</lud> = cairo.image_surface_create_from_png(filename)
+</pre></li>
+
+<li><pre>
+[C]   <a href="#cairo_surface_t">cairo_surface_t</a> * cairo_image_surface_create_from_png_stream (<a href="#cairo_read_func_t">cairo_read_func_t</a> read_func, void *closure);
+[Lua] <ni>not implemented</ni>
+</pre></li>
+
+</ul>
+
+<h2><a name="pattern_creation_functions">Pattern creation functions</a></h2>
+
+<ul>
+
+<li><pre>
+[C]   <a href="#cairo_pattern_t">cairo_pattern_t</a> * cairo_pattern_create_rgb (double red, double green, double blue);
+[Lua] <lud>pat</lud> = cairo.pattern_create_rgb(red, green, blue)
+</pre></li>
+
+<li><pre>
+[C]   <a href="#cairo_pattern_t">cairo_pattern_t</a> * cairo_pattern_create_rgba (double red, double green, double blue, double alpha);
+[Lua] <lud>pat</lud> = cairo.pattern_create_rgba(red, green, blue, alpha)
+</pre></li>
+
+<li><pre>
+[C]   <a href="#cairo_pattern_t">cairo_pattern_t</a> * cairo_pattern_create_for_surface (<a href="#cairo_surface_t">cairo_surface_t</a> *surface);
+[Lua] <lud>pat</lud> = cairo.pattern_create_for_surface(<lud>surface</lud>)
+</pre></li>
+
+<li><pre>
+[C]   <a href="#cairo_pattern_t">cairo_pattern_t</a> * cairo_pattern_create_linear (double x0, double y0, double x1, double y1);
+[Lua] <lud>pat</lud> = cairo.pattern_create_linear(x0, y0, x1, y1)
+</pre></li>
+
+<li><pre>
+[C]   <a href="#cairo_pattern_t">cairo_pattern_t</a> * cairo_pattern_create_radial (double cx0, double cy0, double radius0, double cx1, double cy1, double radius1);
+[Lua] <lud>pat</lud> = cairo.pattern_create_radial(cx0, cy0, radius0, cx1, cy1, radius1)
+</pre></li>
+
+<li><pre>
+[C]   <a href="#cairo_pattern_t">cairo_pattern_t</a> * cairo_pattern_reference (<a href="#cairo_pattern_t">cairo_pattern_t</a> *pattern);
+[Lua] <lud>ref</lud> = cairo.pattern_reference(<lud>pattern</lud>)
+</pre></li>
+
+<li><pre>
+[C]   void cairo_pattern_destroy (<a href="#cairo_pattern_t">cairo_pattern_t</a> *pattern);
+[Lua] cairo.pattern_destroy(<lud>pattern</lud>)
+</pre></li>
+
+<li><pre>
+[C]   unsigned int cairo_pattern_get_reference_count (<a href="#cairo_pattern_t">cairo_pattern_t</a> *pattern);
+[Lua] num = cairo.pattern_get_reference_count(<lud>pattern</lud>)
+</pre></li>
+
+<li><pre>
+[C]   <a href="#cairo_status_t">cairo_status_t</a> cairo_pattern_status (<a href="#cairo_pattern_t">cairo_pattern_t</a> *pattern);
+[Lua] int = cairo.pattern_status(<lud>pattern</lud>)
+</pre></li>
+
+<li><pre>
+[C]   void * cairo_pattern_get_user_data (<a href="#cairo_pattern_t">cairo_pattern_t</a> *pattern, const <a href="#cairo_user_data_key_t">cairo_user_data_key_t</a> *key);
+[Lua] <ni>not implemented</ni>
+</pre></li>
+
+<li><pre>
+[C]   <a href="#cairo_status_t">cairo_status_t</a> cairo_pattern_set_user_data (<a href="#cairo_pattern_t">cairo_pattern_t</a> *pattern, const <a href="#cairo_user_data_key_t">cairo_user_data_key_t</a> *key, void *user_data, <a href="#cairo_destroy_func_t">cairo_destroy_func_t</a> destroy);
+[Lua] <ni>not implemented</ni>
+</pre></li>
+
+<li><pre>
+[C]   <a href="#cairo_pattern_type_t">cairo_pattern_type_t</a> cairo_pattern_get_type (<a href="#cairo_pattern_t">cairo_pattern_t</a> *pattern);
+[Lua] int = cairo.pattern_get_type(<lud>pattern</lud>)
+</pre></li>
+
+<li><pre>
+[C]   void cairo_pattern_add_color_stop_rgb (<a href="#cairo_pattern_t">cairo_pattern_t</a> *pattern, double offset, double red, double green, double blue);
+[Lua] cairo.pattern_add_color_stop_rgb(<lud>pattern</lud>, offset, red, green, blue)
+</pre></li>
+
+<li><pre>
+[C]   void cairo_pattern_add_color_stop_rgba (<a href="#cairo_pattern_t">cairo_pattern_t</a> *pattern, double offset, double red, double green, double blue, double alpha);
+[Lua] cairo.pattern_add_color_stop_rgba(<lud>pattern</lud>, offset, red, green, blue, alpha)
+</pre></li>
+
+<li><pre>
+[C]   void cairo_pattern_set_matrix (<a href="#cairo_pattern_t">cairo_pattern_t</a> *pattern, const <a href="#cairo_matrix_t">cairo_matrix_t</a> *matrix);
+[Lua] cairo.pattern_set_matrix(<lud>pattern</lud>, <ud>matrix</ud>)
+</pre></li>
+
+<li><pre>
+[C]   void cairo_pattern_get_matrix (<a href="#cairo_pattern_t">cairo_pattern_t</a> *pattern, <a href="#cairo_matrix_t">cairo_matrix_t</a> *matrix);
+[Lua] cairo.pattern_get_matrix(<lud>pattern</lud>, <ud>matrix</ud>)
+</pre></li>
+
+<li><pre>
+[C]   void cairo_pattern_set_extend (<a href="#cairo_pattern_t">cairo_pattern_t</a> *pattern, <a href="#cairo_extend_t">cairo_extend_t</a> extend);
+[Lua] cairo.pattern_set_extend(<lud>pattern</lud>, extend)
+</pre></li>
+
+<li><pre>
+[C]   <a href="#cairo_extend_t">cairo_extend_t</a> cairo_pattern_get_extend (<a href="#cairo_pattern_t">cairo_pattern_t</a> *pattern);
+[Lua] int = cairo.pattern_get_extend(<lud>pattern</lud>)
+</pre></li>
+
+<li><pre>
+[C]   void cairo_pattern_set_filter (<a href="#cairo_pattern_t">cairo_pattern_t</a> *pattern, <a href="#cairo_filter_t">cairo_filter_t</a> filter);
+[Lua] cairo.pattern_set_filter(<lud>pattern</lud>, filter)
+</pre></li>
+
+<li><pre>
+[C]   <a href="#cairo_filter_t">cairo_filter_t</a> cairo_pattern_get_filter (<a href="#cairo_pattern_t">cairo_pattern_t</a> *pattern);
+[Lua] int = cairo.pattern_get_filter(<lud>pattern</lud>)
+</pre></li>
+
+<li><pre>
+[C]   <a href="#cairo_status_t">cairo_status_t</a> cairo_pattern_get_rgba (<a href="#cairo_pattern_t">cairo_pattern_t</a> *pattern, double *red, double *green, double *blue, double *alpha);
+[Lua] <du>[WARN] status, red, green, blue, alpha =</du> cairo.pattern_get_rgba(<lud>pattern</lud><op>, red, green, blue, alpha</op>)
+</pre></li>
+
+<li><pre>
+[C]   <a href="#cairo_status_t">cairo_status_t</a> cairo_pattern_get_surface (<a href="#cairo_pattern_t">cairo_pattern_t</a> *pattern, <a href="#cairo_surface_t">cairo_surface_t</a> **surface);
+[Lua] <du>[WARN] status, <lud>surface</lud> =</du> cairo.pattern_get_surface(<lud>pattern</lud>, <lud>surface</lud>)
+</pre></li>
+
+<li><pre>
+[C]   <a href="#cairo_status_t">cairo_status_t</a> cairo_pattern_get_color_stop_rgba (<a href="#cairo_pattern_t">cairo_pattern_t</a> *pattern, int index, double *offset, double *red, double *green, double *blue, double *alpha);
+[Lua] <du>[WARN] status, offset, red, green, blue, alpha =</du> cairo.pattern_get_color_stop_rgba(<lud>pattern</lud>, index<op>, offset, red, green, blue, alpha</op>)
+</pre></li>
+
+<li><pre>
+[C]   <a href="#cairo_status_t">cairo_status_t</a> cairo_pattern_get_color_stop_count (<a href="#cairo_pattern_t">cairo_pattern_t</a> *pattern, int *count);
+[Lua] <du>[WARN] status, count =</du> cairo.pattern_get_color_stop_count(<lud>pattern</lud><op>, count</op>)
+</pre></li>
+
+<li><pre>
+[C]   <a href="#cairo_status_t">cairo_status_t</a> cairo_pattern_get_linear_points (<a href="#cairo_pattern_t">cairo_pattern_t</a> *pattern, double *x0, double *y0, double *x1, double *y1);
+[Lua] <du>[WARN] status, x0, y0, x1, y1 =</du> cairo.pattern_get_linear_points(<lud>pattern</lud><op>, x0, y0, x1, y1</op>)
+</pre></li>
+
+<li><pre>
+[C]   <a href="#cairo_status_t">cairo_status_t</a> cairo_pattern_get_radial_circles (<a href="#cairo_pattern_t">cairo_pattern_t</a> *pattern, double *x0, double *y0, double *r0, double *x1, double *y1, double *r1);
+[Lua] <du>[WARN] status, x0, y0, r0, x1, y1, r1 =</du> cairo.pattern_get_radial_circles(<lud>pattern</lud><op>, x0, y0, r0, x1, y1, r1</op>)
+</pre></li>
+
+</ul>
+
+<h2><a name="matrix_functions">Matrix functions</a></h2>
+
+<ul>
+
+<li><pre>
+[C]   void cairo_matrix_init (<a href="#cairo_matrix_t">cairo_matrix_t</a> *matrix, double xx, double yx, double xy, double yy, double x0, double y0);
+[Lua] cairo.matrix_init(<ud>matrix</ud>, xx, yx, xy, yy, x0, y0)
+</pre></li>
+
+<li><pre>
+[C]   void cairo_matrix_init_identity (<a href="#cairo_matrix_t">cairo_matrix_t</a> *matrix);
+[Lua] cairo.matrix_init_identity(<ud>matrix</ud>)
+</pre></li>
+
+<li><pre>
+[C]   void cairo_matrix_init_translate (<a href="#cairo_matrix_t">cairo_matrix_t</a> *matrix, double tx, double ty);
+[Lua] cairo.matrix_init_translate(<ud>matrix</ud>, tx, ty)
+</pre></li>
+
+<li><pre>
+[C]   void cairo_matrix_init_scale (<a href="#cairo_matrix_t">cairo_matrix_t</a> *matrix, double sx, double sy);
+[Lua] cairo.matrix_init_scale(<ud>matrix</ud>, sx, sy)
+</pre></li>
+
+<li><pre>
+[C]   void cairo_matrix_init_rotate (<a href="#cairo_matrix_t">cairo_matrix_t</a> *matrix, double radians);
+[Lua] cairo.matrix_init_rotate(<ud>matrix</ud>, radians)
+</pre></li>
+
+<li><pre>
+[C]   void cairo_matrix_translate (<a href="#cairo_matrix_t">cairo_matrix_t</a> *matrix, double tx, double ty);
+[Lua] cairo.matrix_translate(<ud>matrix</ud>, tx, ty)
+</pre></li>
+
+<li><pre>
+[C]   void cairo_matrix_scale (<a href="#cairo_matrix_t">cairo_matrix_t</a> *matrix, double sx, double sy);
+[Lua] cairo.matrix_scale(<ud>matrix</ud>, sx, sy)
+</pre></li>
+
+<li><pre>
+[C]   void cairo_matrix_rotate (<a href="#cairo_matrix_t">cairo_matrix_t</a> *matrix, double radians);
+[Lua] cairo.matrix_rotate(<ud>matrix</ud>, radians)
+</pre></li>
+
+<li><pre>
+[C]   <a href="#cairo_status_t">cairo_status_t</a> cairo_matrix_invert (<a href="#cairo_matrix_t">cairo_matrix_t</a> *matrix);
+[Lua] int = cairo.matrix_invert(<ud>matrix</ud>)
+</pre></li>
+
+<li><pre>
+[C]   void cairo_matrix_multiply (<a href="#cairo_matrix_t">cairo_matrix_t</a> *result, const <a href="#cairo_matrix_t">cairo_matrix_t</a> *a, const <a href="#cairo_matrix_t">cairo_matrix_t</a> *b);
+[Lua] cairo.matrix_multiply(<ud>result</ud>, <ud>a</ud>, <ud>b</ud>)
+</pre></li>
+
+<li><pre>
+[C]   void cairo_matrix_transform_distance (const <a href="#cairo_matrix_t">cairo_matrix_t</a> *matrix, double *dx, double *dy);
+[Lua] <du>[WARN] dx, dy =</du> cairo.matrix_transform_distance(<ud>matrix</ud>, dx, dy)
+</pre></li>
+
+<li><pre>
+[C]   void cairo_matrix_transform_point (const <a href="#cairo_matrix_t">cairo_matrix_t</a> *matrix, double *x, double *y);
+[Lua] <du>[WARN] x, y =</du> cairo.matrix_transform_point(<ud>matrix</ud>, x, y)
+</pre></li>
+
+</ul>
+
+<h2><a name="svg_surface">SVG surface</a></h2>
+
+<ul>
+
+<li><pre>
+[C]   <a href="#cairo_surface_t">cairo_surface_t</a> * cairo_svg_surface_create (const char *filename, double width_in_points, double height_in_points);
+[Lua] <lud>surface</lud> = cairo.svg_surface_create(filename, width_in_points, height_in_points)
+</pre></li>
+
+<li><pre>
+[C]   <a href="#cairo_surface_t">cairo_surface_t</a> * cairo_svg_surface_create_for_stream (<a href="#cairo_write_func_t">cairo_write_func_t</a> write_func, void *closure, double width_in_points, double height_in_points);
+[Lua] <ni>not implemented</ni>
+</pre></li>
+
+<li><pre>
+[C]   void cairo_svg_surface_restrict_to_version (<a href="#cairo_surface_t">cairo_surface_t</a> *surface, <a href="#cairo_svg_version_t">cairo_svg_version_t</a> version);
+[Lua] cairo.svg_surface_restrict_to_version(<lud>surface</lud>, version)
+</pre></li>
+
+<li><pre>
+[C]   void cairo_svg_get_versions (<a href="#cairo_svg_version_t">cairo_svg_version_t</a> const **versions, int *num_versions);
+[Lua] <ni>not implemented</ni>
+</pre></li>
+
+<li><pre>
+[C]   const char * cairo_svg_version_to_string (<a href="#cairo_svg_version_t">cairo_svg_version_t</a> version);
+[Lua] str = cairo.svg_version_to_string(version)
+</pre></li>
+
+</ul>
+
+<h2><a name="pdf_surface">PDF surface</a></h2>
+
+<ul>
+
+<li><pre>
+[C]   <a href="#cairo_surface_t">cairo_surface_t</a> * cairo_pdf_surface_create (const char *filename, double width_in_points, double height_in_points);
+[Lua] <lud>surface</lud> = cairo.pdf_surface_create(filename, width_in_points, height_in_points)
+</pre></li>
+
+<li><pre>
+[C]   <a href="#cairo_surface_t">cairo_surface_t</a> * cairo_pdf_surface_create_for_stream (<a href="#cairo_write_func_t">cairo_write_func_t</a> write_func, void *closure, double width_in_points, double height_in_points);
+[Lua] <ni>not implemented</ni>
+</pre></li>
+
+<li><pre>
+[C]   void cairo_pdf_surface_set_size (<a href="#cairo_surface_t">cairo_surface_t</a> *surface, double width_in_points, double height_in_points);
+[Lua] cairo.pdf_surface_set_size(<lud>surface</lud>, width_in_points, height_in_points)
+</pre></li>
+
+<li><pre>
+[C]   void cairo_pdf_surface_restrict_to_version (<a href="#cairo_surface_t">cairo_surface_t</a> *surface, <a href="#cairo_pdf_version_t">cairo_pdf_version_t</a> version);
+[Lua] <ni>not implemented</ni>
+</pre></li>
+
+<li><pre>
+[C]   void cairo_pdf_get_versions (<a href="#cairo_pdf_version_t">cairo_pdf_version_t</a> const **versions, int *num_versions);
+[Lua] <ni>not implemented</ni>
+</pre></li>
+
+<li><pre>
+[C]   const char * cairo_pdf_version_to_string (<a href="#cairo_pdf_version_t">cairo_pdf_version_t</a> version);
+[Lua] <ni>not implemented</ni>
+</pre></li>
+
+</ul>
+
+<h2><a name="ps_surface">PS surface</a></h2>
+
+<ul>
+
+<li><pre>
+[C]   <a href="#cairo_surface_t">cairo_surface_t</a> * cairo_ps_surface_create (const char *filename, double width_in_points, double height_in_points);
+[Lua] <lud>surface</lud> = cairo.ps_surface_create(filename, width_in_points, height_in_points)
+</pre></li>
+
+<li><pre>
+[C]   <a href="#cairo_surface_t">cairo_surface_t</a> * cairo_ps_surface_create_for_stream (<a href="#cairo_write_func_t">cairo_write_func_t</a> write_func, void *closure, double width_in_points, double height_in_points);
+[Lua] <ni>not implemented</ni>
+</pre></li>
+
+<li><pre>
+Cairo-1.6
+[C]   void cairo_ps_surface_restrict_to_level (<a href="#cairo_surface_t">cairo_surface_t</a> *surface, <a href="#cairo_ps_level_t">cairo_ps_level_t</a> level);
+[Lua] cairo.ps_surface_restrict_to_level(<lud>surface</lud>, level)
+</pre></li>
+
+<li><pre>
+Cairo-1.6
+[C]   void cairo_ps_get_levels (<a href="#cairo_ps_level_t">cairo_ps_level_t</a> const  **levels, int *num_levels);
+[Lua] <ni>not implemented</ni>
+</pre></li>
+
+<li><pre>
+Cairo-1.6
+[C]   const char * cairo_ps_level_to_string (<a href="#cairo_ps_level_t">cairo_ps_level_t</a> level);
+[Lua] str = cairo.ps_level_to_string(level)
+</pre></li>
+
+<li><pre>
+Cairo-1.6
+[C]   void cairo_ps_surface_set_eps (<a href="#cairo_surface_t">cairo_surface_t</a> *surface, <a href="#cairo_bool_t">cairo_bool_t</a> eps);
+[Lua] cairo.ps_surface_set_eps(<lud>surface</lud>, eps)
+</pre></li>
+
+<li><pre>
+Cairo-1.6
+[C]   <a href="#cairo_bool_t">cairo_bool_t</a> cairo_ps_surface_get_eps (<a href="#cairo_surface_t">cairo_surface_t</a> *surface);
+[Lua] bool = cairo.ps_surface_get_eps(<lud>surface</lud>)
+</pre></li>
+
+<li><pre>
+[C]   void cairo_ps_surface_set_size (<a href="#cairo_surface_t">cairo_surface_t</a> *surface, double width_in_points, double height_in_points);
+[Lua] cairo.ps_surface_set_size(<lud>surface</lud>, width_in_points, height_in_points)
+</pre></li>
+
+<li><pre>
+[C]   void cairo_ps_surface_dsc_comment (<a href="#cairo_surface_t">cairo_surface_t</a> *surface, const char *comment);
+[Lua] cairo.ps_surface_dsc_comment(<lud>surface</lud>, comment)
+</pre></li>
+
+<li><pre>
+[C]   void cairo_ps_surface_dsc_begin_setup (<a href="#cairo_surface_t">cairo_surface_t</a> *surface);
+[Lua] cairo.ps_surface_dsc_begin_setup(<lud>surface</lud>)
+</pre></li>
+
+<li><pre>
+[C]   void cairo_ps_surface_dsc_begin_page_setup (<a href="#cairo_surface_t">cairo_surface_t</a> *surface);
+[Lua] cairo.ps_surface_dsc_begin_page_setup(<lud>surface</lud>)
+</pre></li>
+
+</ul>
+
+<h2><a name="xcb_surface">XCB surface</a></h2>
+
+<ul>
+
+<li><pre>
+[C]   <a href="#cairo_surface_t">cairo_surface_t</a> * cairo_xcb_surface_create (xcb_connection_t *c, xcb_drawable_t drawable, xcb_visualtype_t *visual, int width, int height);
+[Lua] <ni>not implemented</ni>
+</pre></li>
+
+<li><pre>
+[C]   <a href="#cairo_surface_t">cairo_surface_t</a> * cairo_xcb_surface_create_for_bitmap (xcb_connection_t *c, xcb_pixmap_t bitmap, xcb_screen_t *screen, int width, int height);
+[Lua] <ni>not implemented</ni>
+</pre></li>
+
+<li><pre>
+[C]   void cairo_xcb_surface_set_size (<a href="#cairo_surface_t">cairo_surface_t</a> *surface, int width, int height);
+[Lua] cairo.xcb_surface_set_size(<lud>surface</lud>, width, height)
+</pre></li>
+
+<li><pre>
+[C]   <a href="#cairo_surface_t">cairo_surface_t</a> * cairo_xcb_surface_create_with_xrender_format (xcb_connection_t *c, xcb_drawable_t drawable, xcb_screen_t *screen, xcb_render_pictforminfo_t *format, int width, int height);
+[Lua] <ni>not implemented</ni>
+</pre></li>
+
+<li><pre>
+[C]   void cairo_xcb_device_debug_cap_xshm_version (<a href="#cairo_device_t">cairo_device_t</a> *device, int major_version, int minor_version);
+[Lua] <ni>not implemented</ni>
+</pre></li>
+
+<li><pre>
+[C]   void cairo_xcb_device_debug_cap_xrender_version (<a href="#cairo_device_t">cairo_device_t</a> *device, int major_version, int minor_version);
+[Lua] <ni>not implemented</ni>
+</pre></li>
+
+</ul>
+
+<h2><a name="xlib_surface">XLIB surface</a></h2>
+
+<ul>
+
+<li><pre>
+[C]   <a href="#cairo_surface_t">cairo_surface_t</a> * cairo_xlib_surface_create (Display *dpy, Drawable drawable, Visual *visual, int width, int height);
+[Lua] <ni>not implemented</ni>
+</pre></li>
+
+<li><pre>
+[C]   <a href="#cairo_surface_t">cairo_surface_t</a> * cairo_xlib_surface_create_for_bitmap (Display *dpy, Pixmap bitmap, Screen *screen, int width, int	height);
+[Lua] <ni>not implemented</ni>
+</pre></li>
+
+<li><pre>
+[C]   void cairo_xlib_surface_set_size (<a href="#cairo_surface_t">cairo_surface_t</a> *surface, int width, int height);
+[Lua] cairo.xlib_surface_set_size(<lud>surface</lud>, width, height)
+</pre></li>
+
+<li><pre>
+>[C]  void cairo_xlib_surface_set_drawable (<a href="#cairo_surface_t">cairo_surface_t</a> *surface, Drawable drawable, int width, int height);
+[Lua] <ni>not implemented</ni>
+</pre></li>
+
+<li><pre>
+[C]   Display * cairo_xlib_surface_get_display (<a href="#cairo_surface_t">cairo_surface_t</a> *surface);
+[Lua] <lud>display</lud> = cairo.xlib_surface_get_display(<lud>surface</lud>)
+</pre></li>
+
+<li><pre>
+[C]   Drawable cairo_xlib_surface_get_drawable (<a href="#cairo_surface_t">cairo_surface_t</a> *surface);
+[Lua] <ni>not implemented</ni>
+</pre></li>
+
+<li><pre>
+[C]   Screen * cairo_xlib_surface_get_screen (<a href="#cairo_surface_t">cairo_surface_t</a> *surface);
+[Lua] <lud>screen</lud> = cairo.xlib_surface_get_screen(<lud>surface</lud>)
+</pre></li>
+
+<li><pre>
+[C]   Visual * cairo_xlib_surface_get_visual (<a href="#cairo_surface_t">cairo_surface_t</a> *surface);
+[Lua] <lud>visual</lud> = cairo.xlib_surface_get_visual(<lud>surface</lud>)
+</pre></li>
+
+<li><pre>
+[C]   int cairo_xlib_surface_get_depth (<a href="#cairo_surface_t">cairo_surface_t</a> *surface);
+[Lua] int = cairo.xlib_surface_get_depth(<lud>surface</lud>)
+</pre></li>
+
+<li><pre>
+[C]   int cairo_xlib_surface_get_width (<a href="#cairo_surface_t">cairo_surface_t</a> *surface);
+[Lua] int = cairo.xlib_surface_get_width(<lud>surface</lud>)
+</pre></li>
+
+<li><pre>
+[C]   int cairo_xlib_surface_get_height (<a href="#cairo_surface_t">cairo_surface_t</a> *surface);
+[Lua] int = cairo.xlib_surface_get_height(<lud>surface</lud>)
+</pre></li>
+
+<li><pre>
+[C]   <a href="#cairo_surface_t">cairo_surface_t</a> * cairo_xlib_surface_create_with_xrender_format (Display *dpy, Drawable drawable, Screen *screen, XRenderPictFormat *format, int width, int height);
+[Lua] <ni>not implemented</ni>
+</pre></li>
+
+<li><pre>
+[C]   cairo_public XRenderPictFormat * cairo_xlib_surface_get_xrender_format (<a href="#cairo_surface_t">cairo_surface_t</a> *surface);
+[Lua] <ni>not implemented</ni>
+</pre></li>
+
+</ul>
+
+<h2><a name="win32_surface">WIN32 surface</a></h2>
+
+<ul>
+
+<li><pre>
+[C]   <a href="#cairo_surface_t">cairo_surface_t</a> * cairo_win32_surface_create (HDC hdc);
+[Lua] <lud>surface</lud> = cairo.win32_surface_create(<lud>hdc</lud>)
+</pre></li>
+
+<li><pre>
+Cairo-1.6
+[C]   <a href="#cairo_surface_t">cairo_surface_t</a> * cairo_win32_printing_surface_create (HDC hdc);
+[Lua] <lud>surface</lud> = cairo.win32_printing_surface_create(<lud>hdc</lud>)
+</pre></li>
+
+<li><pre>
+[C]   <a href="#cairo_surface_t">cairo_surface_t</a> * cairo_win32_surface_create_with_ddb (HDC hdc, <a href="#cairo_format_t">cairo_format_t</a> format, int width, int height);
+[Lua] <lud>surface</lud> = cairo.win32_surface_create_with_ddb(<lud>hdc</lud>, format, width, height)
+</pre></li>
+
+<li><pre>
+[C]   <a href="#cairo_surface_t">cairo_surface_t</a> * cairo_win32_surface_create_with_dib (<a href="#cairo_format_t">cairo_format_t</a> format, int width, int height);
+[Lua] <lud>surface</lud> = cairo.win32_surface_create_with_dib(format, width, height)
+</pre></li>
+
+<li><pre>
+[C]   HDC cairo_win32_surface_get_dc (<a href="#cairo_surface_t">cairo_surface_t</a> *surface);
+[Lua] <lud>dc</lud> = cairo.win32_surface_get_dc(<lud>surface</lud>)
+</pre></li>
+
+<li><pre>
+[C]   <a href="#cairo_surface_t">cairo_surface_t</a> * cairo_win32_surface_get_image (<a href="#cairo_surface_t">cairo_surface_t</a> *surface);
+[Lua] <lud>img</lud> = cairo.win32_surface_get_image(<lud>surface</lud>)
+</pre></li>
+
+<li><pre>
+[C]   <a href="#cairo_font_face_t">cairo_font_face_t</a> * cairo_win32_font_face_create_for_logfontw (LOGFONTW *logfont);
+[Lua] <lud>font_face</lud> = cairo.win32_font_face_create_for_logfontw(<lud>logfont</lud>)
+</pre></li>
+
+<li><pre>
+[C]   <a href="#cairo_font_face_t">cairo_font_face_t</a> * cairo_win32_font_face_create_for_hfont (HFONT font);
+[Lua] <lud>font_face</lud> = cairo.win32_font_face_create_for_hfont(<lud>font</lud>)
+</pre></li>
+
+<li><pre>
+Cairo-1.6
+[C]   <a href="#cairo_font_face_t">cairo_font_face_t</a> * cairo_win32_font_face_create_for_logfontw_hfont (LOGFONTW *logfont, HFONT font);
+[Lua] <lud>font_face</lud> = cairo.win32_font_face_create_for_logfontw_hfont(<lud>logfont</lud>, <lud>font</lud>)
+</pre></li>
+
+<li><pre>
+[C]   <a href="#cairo_status_t">cairo_status_t</a> cairo_win32_scaled_font_select_font (<a href="#cairo_scaled_font_t">cairo_scaled_font_t</a> *scaled_font, HDC hdc);
+[Lua] int = cairo.win32_scaled_font_select_font(<lud>scaled_font</lud>, <lud>hdc</lud>)
+</pre></li>
+
+<li><pre>
+[C]   void cairo_win32_scaled_font_done_font (<a href="#cairo_scaled_font_t">cairo_scaled_font_t</a> *scaled_font);
+[Lua] cairo.win32_scaled_font_done_font(<lud>scaled_font</lud>)
+</pre></li>
+
+<li><pre>
+[C]   double cairo_win32_scaled_font_get_metrics_factor (<a href="#cairo_scaled_font_t">cairo_scaled_font_t</a> *scaled_font);
+[Lua] num = cairo.win32_scaled_font_get_metrics_factor(<lud>scaled_font</lud>)
+</pre></li>
+
+<li><pre>
+[C]   void cairo_win32_scaled_font_get_logical_to_device (<a href="#cairo_scaled_font_t">cairo_scaled_font_t</a> *scaled_font, <a href="#cairo_matrix_t">cairo_matrix_t</a> *logical_to_device);
+[Lua] cairo.win32_scaled_font_get_logical_to_device(<lud>scaled_font</lud>, <ud>logical_to_device</ud>)
+</pre></li>
+
+<li><pre>
+[C]   void cairo_win32_scaled_font_get_device_to_logical (<a href="#cairo_scaled_font_t">cairo_scaled_font_t</a> *scaled_font, <a href="#cairo_matrix_t">cairo_matrix_t</a> *device_to_logical);
+[Lua] cairo.win32_scaled_font_get_device_to_logical(<lud>scaled_font</lud>, <ud>device_to_logical</ud>)
+</pre></li>
+
+</ul>
+
+<h2><a name="beos_surface">BEOS surface</a></h2>
+
+<ul>
+
+<li><pre>
+[C]   <a href="#cairo_surface_t">cairo_surface_t</a> * cairo_beos_surface_create (BView* view);
+[Lua] <lud>surface</lud> = cairo.beos_surface_create(<lud>view</lud>)
+</pre></li>
+
+<li><pre>
+[C]   <a href="#cairo_surface_t">cairo_surface_t</a> * cairo_beos_surface_create_for_bitmap (BView* view, BBitmap* bmp);
+[Lua] <lud>surface</lud> = cairo.beos_surface_create_for_bitmap(<lud>view</lud>, <lud>bmp</lud>)
+</pre></li>
+
+</ul>
+
+<h2><a name="directfb_surface">DIRECTFB surface</a></h2>
+
+<ul>
+
+<li><pre>
+[C]   <a href="#cairo_surface_t">cairo_surface_t</a> * cairo_directfb_surface_create (IDirectFB *dfb,IDirectFBSurface *surface);
+[Lua] <lud>surface</lud> = cairo.directfb_surface_create(<lud>dfb</lud>, <lud>surface</lud>)
+</pre></li>
+
+</ul>
+
+<h2><a name="os2_surface">OS2 surface</a></h2>
+
+<ul>
+
+<li><pre>
+[C]   <a href="#cairo_surface_t">cairo_surface_t</a> * cairo_os2_surface_create (HPS hps_client_window, int width, int height);
+[Lua] <ni>not implemented</ni>
+</pre></li>
+
+<li><pre>
+[C]   void cairo_os2_surface_set_hwnd (<a href="#cairo_surface_t">cairo_surface_t</a> *surface, HWND hwnd_client_window);
+[Lua] <ni>not implemented</ni>
+</pre></li>
+
+<li><pre>
+[C]   int cairo_os2_surface_set_size (<a href="#cairo_surface_t">cairo_surface_t</a> *surface, int new_width, int new_height, int timeout);
+[Lua] int = cairo.os2_surface_set_size(<lud>surface</lud>, new_width, new_height, timeout)
+</pre></li>
+
+<li><pre>
+[C]   void cairo_os2_surface_refresh_window (<a href="#cairo_surface_t">cairo_surface_t</a> *surface, HPS hps_begin_paint, PRECTL prcl_begin_paint_rect);
+[Lua] <ni>not implemented</ni>
+</pre></li>
+
+<li><pre>
+[C]   void cairo_os2_surface_set_manual_window_refresh (<a href="#cairo_surface_t">cairo_surface_t</a> *surface, <a href="#cairo_bool_t">cairo_bool_t</a> manual_refresh);
+[Lua] cairo.os2_surface_set_manual_window_refresh(<lud>surface</lud>, manual_refresh)
+</pre></li>
+
+<li><pre>
+[C]   <a href="#cairo_bool_t">cairo_bool_t</a> cairo_os2_surface_get_manual_window_refresh (<a href="#cairo_surface_t">cairo_surface_t</a> *surface);
+[Lua] bool = cairo.os2_surface_get_manual_window_refresh(<lud>surface</lud>)
+</pre></li>
+
+<li><pre>
+[C]   <a href="#cairo_surface_t">cairo_surface_t</a> * cairo_os2_surface_create_for_window (HWND hwnd_client_window, int width, int height);
+[Lua] <ni>not implemented</ni>
+</pre></li>
+
+<li><pre>
+[C]   <a href="#cairo_status_t">cairo_status_t</a> cairo_os2_surface_get_hps (<a href="#cairo_surface_t">cairo_surface_t</a> *surface, HPS *hps);
+[Lua] <ni>not implemented</ni>
+</pre></li>
+
+<li><pre>
+[C]   <a href="#cairo_status_t">cairo_status_t</a> cairo_os2_surface_set_hps (<a href="#cairo_surface_t">cairo_surface_t</a> *surface, HPS hps);
+[Lua] <ni>not implemented</ni>
+</pre></li>
+
+</ul>
+
+<h2><a name="glitz_surface">GLITZ surface</a></h2>
+
+<ul>
+
+<li><pre>
+[C]   <a href="#cairo_surface_t">cairo_surface_t</a> * cairo_glitz_surface_create (glitz_surface_t *surface);
+[Lua] <lud>gsurface</lud> = cairo.glitz_surface_create(<lud>surface</lud>)
+</pre></li>
+
+</ul>
+
+<h2><a name="quartz_surface">QUARTZ surface</a></h2>
+
+<ul>
+
+<li><pre>
+[C]   <a href="#cairo_surface_t">cairo_surface_t</a> * cairo_quartz_surface_create (<a href="#cairo_format_t">cairo_format_t</a> format, unsigned int width, unsigned int height);
+[Lua] <lud>surface</lud> = cairo.quartz_surface_create(format, width, height)
+</pre></li>
+
+<li><pre>
+[C]   <a href="#cairo_surface_t">cairo_surface_t</a> * cairo_quartz_surface_create_for_cg_context (CGContextRef cgContext, unsigned int width, unsigned int height);
+[Lua] <ni>not implemented</ni>
+</pre></li>
+
+<li><pre>
+[C]   CGContextRef cairo_quartz_surface_get_cg_context (<a href="#cairo_surface_t">cairo_surface_t</a> *surface);
+[Lua] <ni>not implemented</ni>
+</pre></li>
+
+</ul>
+
+
+<h2><a name="quartz_image_surface">QUARTZ Image surface</a></h2>
+
+<ul>
+
+<li><pre>
+[C]   <a href="#cairo_surface_t">cairo_surface_t</a> * cairo_quartz_image_surface_create (<a href="#cairo_surface_t">cairo_surface_t</a> *image_surface);
+[Lua] <ni>not implemented</ni>
+</pre></li>
+
+<li><pre>
+[C]   <a href="#cairo_surface_t">cairo_surface_t</a> * cairo_quartz_image_surface_get_image (<a href="#cairo_surface_t">cairo_surface_t</a> *surface);
+[Lua] <ni>not implemented</ni>
+</pre></li>
+
+</ul>
+
+
+<h2><a name="sub_surface">Sub surface</a></h2>
+Cairo-1.10.0
+<ul>
+
+<li><pre>
+[C]   <a href="#cairo_surface_t">cairo_surface_t</a> * cairo_surface_create_for_rectangle (<a href="#cairo_surface_t">cairo_surface_t</a> *target, double x, double y, double width, double height);
+[Lua] <ni>not implemented</ni>
+</pre></li>
+
+</ul>
+
+
+<h2><a name="recording_surface">Recording surface</a></h2>
+<ul>
+
+<li><pre>
+[C]   <a href="#cairo_surface_t">cairo_surface_t</a> * cairo_recording_surface_create (<a href="#cairo_content_t">cairo_content_t</a> content, const <a href="#cairo_rectangle_t">cairo_rectangle_t</a> *extents);
+[Lua] <ni>not implemented</ni>
+</pre></li>
+
+<li><pre>
+[C]   void cairo_recording_surface_ink_extents (<a href="#cairo_surface_t">cairo_surface_t</a> *surface, double *x0, double *y0, double *width, double *height);
+[Lua] <ni>not implemented</ni>
+</pre></li>
+
+</ul>
+
+<h2><a name="drm_surface">DRM surface</a></h2>
+<ul>
+
+<li><pre>
+[C]   <a href="#cairo_device_t">cairo_device_t</a> * cairo_drm_device_get (struct udev_device *device);
+[Lua] <ni>not implemented</ni>
+</pre></li>
+
+<li><pre>
+[C]   <a href="#cairo_device_t">cairo_device_t</a> * cairo_drm_device_get_for_fd (int fd);
+[Lua] <ni>not implemented</ni>
+</pre></li>
+
+<li><pre>
+[C]   <a href="#cairo_device_t">cairo_device_t</a> * cairo_drm_device_default (void);
+[Lua] <ni>not implemented</ni>
+</pre></li>
+
+<li><pre>
+[C]   int cairo_drm_device_get_fd (<a href="#cairo_device_t">cairo_device_t</a> *device);
+[Lua] <ni>not implemented</ni>
+</pre></li>
+
+<li><pre>
+[C]   void cairo_drm_device_throttle (<a href="#cairo_device_t">cairo_device_t</a> *device);
+[Lua] <ni>not implemented</ni>
+</pre></li>
+
+<li><pre>
+[C]   <a href="#cairo_surface_t">cairo_surface_t</a> * cairo_drm_surface_create (<a href="#cairo_device_t">cairo_device_t</a> *device, <a href="#cairo_format_t">cairo_format_t</a> format, int width, int height);
+[Lua] <ni>not implemented</ni>
+</pre></li>
+
+<li><pre>
+[C]   <a href="#cairo_surface_t">cairo_surface_t</a> * cairo_drm_surface_create_for_name (<a href="#cairo_device_t">cairo_device_t</a> *device, unsigned int name, <a href="#cairo_format_t">cairo_format_t</a> format, int width, int height, int stride);
+[Lua] <ni>not implemented</ni>
+</pre></li>
+
+<li><pre>
+[C]   <a href="#cairo_surface_t">cairo_surface_t</a> * cairo_drm_surface_create_from_cacheable_image (<a href="#cairo_device_t">cairo_device_t</a> *device, <a href="#cairo_surface_t">cairo_surface_t</a> *surface);
+[Lua] <ni>not implemented</ni>
+</pre></li>
+
+<li><pre>
+[C]   <a href="#cairo_status_t">cairo_status_t</a> cairo_drm_surface_enable_scan_out (<a href="#cairo_surface_t">cairo_surface_t</a> *surface);
+[Lua] <ni>not implemented</ni>
+</pre></li>
+
+<li><pre>
+[C]   unsigned int cairo_drm_surface_get_handle (<a href="#cairo_surface_t">cairo_surface_t</a> *surface);
+[Lua] <ni>not implemented</ni>
+</pre></li>
+
+<li><pre>
+[C]   unsigned int cairo_drm_surface_get_name (<a href="#cairo_surface_t">cairo_surface_t</a> *surface);
+[Lua] <ni>not implemented</ni>
+</pre></li>
+
+<li><pre>
+[C]   <a href="#cairo_format_t">cairo_format_t</a> cairo_drm_surface_get_format (<a href="#cairo_surface_t">cairo_surface_t</a> *surface);
+[Lua] <ni>not implemented</ni>
+</pre></li>
+
+<li><pre>
+[C]   int cairo_drm_surface_get_width (<a href="#cairo_surface_t">cairo_surface_t</a> *surface);
+[Lua] <ni>not implemented</ni>
+</pre></li>
+
+<li><pre>
+[C]   int cairo_drm_surface_get_height (<a href="#cairo_surface_t">cairo_surface_t</a> *surface);
+[Lua] <ni>not implemented</ni>
+</pre></li>
+
+<li><pre>
+[C]   int cairo_drm_surface_get_stride (<a href="#cairo_surface_t">cairo_surface_t</a> *surface);
+[Lua] <ni>not implemented</ni>
+</pre></li>
+
+<li><pre>
+[C]   <a href="#cairo_surface_t">cairo_surface_t</a> * cairo_drm_surface_map_to_image (<a href="#cairo_surface_t">cairo_surface_t</a> *surface);
+[Lua] <ni>not implemented</ni>
+</pre></li>
+
+<li><pre>
+[C]   void cairo_drm_surface_unmap (<a href="#cairo_surface_t">cairo_surface_t</a> *drm_surface, <a href="#cairo_surface_t">cairo_surface_t</a> *image_surface);
+[Lua] <ni>not implemented</ni>
+</pre></li>
+
+</ul>
+
+<h2><a name="gl_surface">GL surface</a></h2>
+<ul>
+
+<li><pre>
+[C]   <a href="#cairo_surface_t">cairo_surface_t</a> * cairo_gl_surface_create (<a href="#cairo_device_t">cairo_device_t</a> *device, <a href="#cairo_content_t">cairo_content_t</a> content, int width, int height);
+[Lua] <ni>not implemented</ni>
+</pre></li>
+
+<li><pre>
+[C]   <a href="#cairo_surface_t">cairo_surface_t</a> * cairo_gl_surface_create_for_texture (<a href="#cairo_device_t">cairo_device_t</a> *abstract_device, <a href="#cairo_content_t">cairo_content_t</a> content, unsigned int tex, int width, int height);
+[Lua] <ni>not implemented</ni>
+</pre></li>
+
+<li><pre>
+[C]   void cairo_gl_surface_set_size (<a href="#cairo_surface_t">cairo_surface_t</a> *surface, int width, int height);
+[Lua] <ni>not implemented</ni>
+</pre></li>
+
+<li><pre>
+[C]   int cairo_gl_surface_get_width (<a href="#cairo_surface_t">cairo_surface_t</a> *abstract_surface);
+[Lua] <ni>not implemented</ni>
+</pre></li>
+
+<li><pre>
+[C]   int cairo_gl_surface_get_height (<a href="#cairo_surface_t">cairo_surface_t</a> *abstract_surface);
+[Lua] <ni>not implemented</ni>
+</pre></li>
+
+<li><pre>
+[C]   void cairo_gl_surface_swapbuffers (<a href="#cairo_surface_t">cairo_surface_t</a> *surface);
+[Lua] <ni>not implemented</ni>
+</pre></li>
+
+<li><pre>
+[C]   <a href="#cairo_device_t">cairo_device_t</a> * cairo_glx_device_create (Display *dpy, GLXContext gl_ctx);
+[Lua] <ni>not implemented</ni>
+</pre></li>
+
+<li><pre>
+[C]   Display * cairo_glx_device_get_display (<a href="#cairo_device_t">cairo_device_t</a> *device);
+[Lua] <ni>not implemented</ni>
+</pre></li>
+
+<li><pre>
+[C]   GLXContext cairo_glx_device_get_context (<a href="#cairo_device_t">cairo_device_t</a> *device);
+[Lua] <ni>not implemented</ni>
+</pre></li>
+
+<li><pre>
+[C]   <a href="#cairo_surface_t">cairo_surface_t</a> * cairo_gl_surface_create_for_window (<a href="#cairo_device_t">cairo_device_t</a> *device, Window win, int width, int height);
+[Lua] <ni>not implemented</ni>
+</pre></li>
+
+<li><pre>
+[C]   <a href="#cairo_device_t">cairo_device_t</a> * cairo_wgl_device_create (HGLRC rc);
+[Lua] <ni>not implemented</ni>
+</pre></li>
+
+<li><pre>
+[C]   HGLRC cairo_wgl_device_get_context (<a href="#cairo_device_t">cairo_device_t</a> *device);
+[Lua] <ni>not implemented</ni>
+</pre></li>
+
+<li><pre>
+[C]   <a href="#cairo_surface_t">cairo_surface_t</a> * cairo_gl_surface_create_for_dc (<a href="#cairo_device_t">cairo_device_t</a> *device, HDC dc, int width, int height);
+[Lua] <ni>not implemented</ni>
+</pre></li>
+
+<li><pre>
+[C]   <a href="#cairo_device_t">cairo_device_t</a> * cairo_egl_device_create (EGLDisplay dpy, EGLContext egl);
+[Lua] <ni>not implemented</ni>
+</pre></li>
+
+<li><pre>
+[C]   <a href="#cairo_surface_t">cairo_surface_t</a> * cairo_gl_surface_create_for_egl (<a href="#cairo_device_t">cairo_device_t</a> *device, EGLSurface egl, int width, int height);
+[Lua] <ni>not implemented</ni>
+</pre></li>
+
+</ul>
+
+<h2><a name="qt_surface">QT surface</a></h2>
+<ul>
+
+<li><pre>
+[C]   <a href="#cairo_surface_t">cairo_surface_t</a> * cairo_qt_surface_create (QPainter *painter);
+[Lua] <ni>not implemented</ni>
+</pre></li>
+
+<li><pre>
+[C]   <a href="#cairo_surface_t">cairo_surface_t</a> * cairo_qt_surface_create_with_qimage (<a href="#cairo_format_t">cairo_format_t</a> format, int width, int height);
+[Lua] <ni>not implemented</ni>
+</pre></li>
+
+<li><pre>
+[C]   <a href="#cairo_surface_t">cairo_surface_t</a> * cairo_qt_surface_create_with_qpixmap (<a href="#cairo_content_t">cairo_content_t</a> content, int width, int height);
+[Lua] <ni>not implemented</ni>
+</pre></li>
+
+<li><pre>
+[C]   QPainter * cairo_qt_surface_get_qpainter (<a href="#cairo_surface_t">cairo_surface_t</a> *surface);
+[Lua] <ni>not implemented</ni>
+</pre></li>
+
+<li><pre>
+[C]   <a href="#cairo_surface_t">cairo_surface_t</a> * cairo_qt_surface_get_image (<a href="#cairo_surface_t">cairo_surface_t</a> *surface);
+[Lua] <ni>not implemented</ni>
+</pre></li>
+
+<li><pre>
+[C]   QImage * cairo_qt_surface_get_qimage (<a href="#cairo_surface_t">cairo_surface_t</a> *surface);
+[Lua] <ni>not implemented</ni>
+</pre></li>
+
+</ul>
+
+<h2><a name="script_surface">Script surface</a></h2>
+<ul>
+
+<li><pre>
+[C]   <a href="#cairo_device_t">cairo_device_t</a> * cairo_script_create (const char *filename);
+[Lua] <ni>not implemented</ni>
+</pre></li>
+
+<li><pre>
+[C]   <a href="#cairo_device_t">cairo_device_t</a> * cairo_script_create_for_stream (<a href="#cairo_write_func_t">cairo_write_func_t</a> write_func, void *closure);
+[Lua] <ni>not implemented</ni>
+</pre></li>
+
+<li><pre>
+[C]   void cairo_script_write_comment (<a href="#cairo_device_t">cairo_device_t</a> *script, const char *comment, int len);
+[Lua] <ni>not implemented</ni>
+</pre></li>
+
+<li><pre>
+[C]   void cairo_script_set_mode (<a href="#cairo_device_t">cairo_device_t</a> *script, <a href="#cairo_script_mode_t">cairo_script_mode_t</a> mode);
+[Lua] <ni>not implemented</ni>
+</pre></li>
+
+<li><pre>
+[C]   <a href="#cairo_script_mode_t">cairo_script_mode_t</a> cairo_script_get_mode (<a href="#cairo_device_t">cairo_device_t</a> *script);
+[Lua] <ni>not implemented</ni>
+</pre></li>
+
+<li><pre>
+[C]   <a href="#cairo_surface_t">cairo_surface_t</a> * cairo_script_surface_create (<a href="#cairo_device_t">cairo_device_t</a> *script, <a href="#cairo_content_t">cairo_content_t</a> content, double width, double height);
+[Lua] <ni>not implemented</ni>
+</pre></li>
+
+<li><pre>
+[C]   <a href="#cairo_surface_t">cairo_surface_t</a> * cairo_script_surface_create_for_target (<a href="#cairo_device_t">cairo_device_t</a> *script, <a href="#cairo_surface_t">cairo_surface_t</a> *target);
+[Lua] <ni>not implemented</ni>
+</pre></li>
+
+<li><pre>
+[C]   <a href="#cairo_status_t">cairo_status_t</a> cairo_script_from_recording_surface (<a href="#cairo_device_t">cairo_device_t</a> *script, <a href="#cairo_surface_t">cairo_surface_t</a> *recording_surface);
+[Lua] <ni>not implemented</ni>
+</pre></li>
+
+</ul>
+
+<h2><a name="skia_surface">Skia surface</a></h2>
+<ul>
+
+<li><pre>
+[C]   <a href="#cairo_surface_t">cairo_surface_t</a> * cairo_skia_surface_create (<a href="#cairo_format_t">cairo_format_t</a> format, int width, int height);
+[Lua] <ni>not implemented</ni>
+</pre></li>
+
+<li><pre>
+[C]   <a href="#cairo_surface_t">cairo_surface_t</a> * cairo_skia_surface_create_for_data (unsigned char *data, <a href="#cairo_format_t">cairo_format_t</a> format, int width, int height, int stride);
+[Lua] <ni>not implemented</ni>
+</pre></li>
+
+<li><pre>
+[C]   unsigned char * cairo_skia_surface_get_data (<a href="#cairo_surface_t">cairo_surface_t</a> *surface);
+[Lua] <ni>not implemented</ni>
+</pre></li>
+
+<li><pre>
+[C]   <a href="#cairo_format_t">cairo_format_t</a> cairo_skia_surface_get_format (<a href="#cairo_surface_t">cairo_surface_t</a> *surface);
+[Lua] <ni>not implemented</ni>
+</pre></li>
+
+<li><pre>
+[C]   int cairo_skia_surface_get_width (<a href="#cairo_surface_t">cairo_surface_t</a> *surface);
+[Lua] <ni>not implemented</ni>
+</pre></li>
+
+<li><pre>
+[C]   int cairo_skia_surface_get_height (<a href="#cairo_surface_t">cairo_surface_t</a> *surface);
+[Lua] <ni>not implemented</ni>
+</pre></li>
+
+<li><pre>
+[C]   int cairo_skia_surface_get_stride (<a href="#cairo_surface_t">cairo_surface_t</a> *surface);
+[Lua] <ni>not implemented</ni>
+</pre></li>
+
+<li><pre>
+[C]   <a href="#cairo_surface_t">cairo_surface_t</a> * cairo_skia_surface_get_image (<a href="#cairo_surface_t">cairo_surface_t</a> *surface);
+[Lua] <ni>not implemented</ni>
+</pre></li>
+
+</ul>
+
+<h2><a name="tee_surface">Tee surface</a></h2>
+<ul>
+
+<li><pre>
+[C]   <a href="#cairo_surface_t">cairo_surface_t</a> * cairo_tee_surface_create (<a href="#cairo_surface_t">cairo_surface_t</a> *master);
+[Lua] <ni>not implemented</ni>
+</pre></li>
+
+<li><pre>
+[C]   void cairo_tee_surface_add (<a href="#cairo_surface_t">cairo_surface_t</a> *surface, <a href="#cairo_surface_t">cairo_surface_t</a> *target);
+[Lua] <ni>not implemented</ni>
+</pre></li>
+
+<li><pre>
+[C]   void cairo_tee_surface_remove (<a href="#cairo_surface_t">cairo_surface_t</a> *surface, <a href="#cairo_surface_t">cairo_surface_t</a> *target);
+[Lua] <ni>not implemented</ni>
+</pre></li>
+
+<li><pre>
+[C]   <a href="#cairo_surface_t">cairo_surface_t</a> * cairo_tee_surface_index (<a href="#cairo_surface_t">cairo_surface_t</a> *surface, int index);
+[Lua] <ni>not implemented</ni>
+</pre></li>
+
+</ul>
+
+<h2><a name="vg_surface">VG surface</a></h2>
+<ul>
+
+<li><pre>
+[C]   <a href="#cairo_vg_context_t">cairo_vg_context_t</a> * cairo_vg_context_create_for_glx (Display *dpy, GLXContext ctx);
+[Lua] <ni>not implemented</ni>
+</pre></li>
+
+<li><pre>
+[C]   <a href="#cairo_vg_context_t">cairo_vg_context_t</a> * cairo_vg_context_create_for_egl (EGLDisplay egl_display, EGLContext egl_context);
+[Lua] <ni>not implemented</ni>
+</pre></li>
+
+<li><pre>
+[C]   <a href="#cairo_status_t">cairo_status_t</a> cairo_vg_context_status (<a href="#cairo_vg_context_t">cairo_vg_context_t</a> *context);
+[Lua] <ni>not implemented</ni>
+</pre></li>
+
+<li><pre>
+[C]   void cairo_vg_context_destroy (<a href="#cairo_vg_context_t">cairo_vg_context_t</a> *context);
+[Lua] <ni>not implemented</ni>
+</pre></li>
+
+<li><pre>
+[C]   <a href="#cairo_surface_t">cairo_surface_t</a> * cairo_vg_surface_create (<a href="#cairo_vg_context_t">cairo_vg_context_t</a> *context, <a href="#cairo_content_t">cairo_content_t</a> content, int width, int height);
+[Lua] <ni>not implemented</ni>
+</pre></li>
+
+<li><pre>
+[C]   <a href="#cairo_surface_t">cairo_surface_t</a> * cairo_vg_surface_create_for_image (<a href="#cairo_vg_context_t">cairo_vg_context_t</a> *context, VGImage image, VGImageFormat format, int width, int height); 
+[Lua] <ni>not implemented</ni>
+</pre></li>
+
+<li><pre>
+[C]   VGImage cairo_vg_surface_get_image (<a href="#cairo_surface_t">cairo_surface_t</a> *abstract_surface);
+[Lua] <ni>not implemented</ni>
+</pre></li>
+
+<li><pre>
+[C]   VGImageFormat cairo_vg_surface_get_format (<a href="#cairo_surface_t">cairo_surface_t</a> *abstract_surface);
+[Lua] <ni>not implemented</ni>
+</pre></li>
+
+<li><pre>
+[C]   int cairo_vg_surface_get_height (<a href="#cairo_surface_t">cairo_surface_t</a> *abstract_surface);
+[Lua] <ni>not implemented</ni>
+</pre></li>
+
+<li><pre>
+[C]   int cairo_vg_surface_get_width (<a href="#cairo_surface_t">cairo_surface_t</a> *abstract_surface);
+[Lua] <ni>not implemented</ni>
+</pre></li>
+
+</ul>
+
+<h2><a name="xml_surface">XML surface</a></h2>
+<ul>
+
+<li><pre>
+[C]   <a href="#cairo_device_t">cairo_device_t</a> * cairo_xml_create (const char *filename);
+[Lua] <ni>not implemented</ni>
+</pre></li>
+
+<li><pre>
+[C]   <a href="#cairo_device_t">cairo_device_t</a> * cairo_xml_create_for_stream (<a href="#cairo_write_func_t">cairo_write_func_t</a> write_func, void *closure);
+[Lua] <ni>not implemented</ni>
+</pre></li>
+
+<li><pre>
+[C]   <a href="#cairo_surface_t">cairo_surface_t</a> * cairo_xml_surface_create (<a href="#cairo_device_t">cairo_device_t</a> *xml, <a href="#cairo_content_t">cairo_content_t</a> content, double width, double height);
+[Lua] <ni>not implemented</ni>
+</pre></li>
+
+<li><pre>
+[C]   <a href="#cairo_status_t">cairo_status_t</a> cairo_xml_for_recording_surface (<a href="#cairo_device_t">cairo_device_t</a> *xml, <a href="#cairo_surface_t">cairo_surface_t</a> *surface);
+[Lua] <ni>not implemented</ni>
+</pre></li>
+
+</ul>
+
+
+<h2><a name="quartz_font">QUARTZ font</a></h2>
+
+<ul>
+
+<li><pre>
+[C]   <a href="#cairo_font_face_t">cairo_font_face_t</a> * cairo_quartz_font_face_create_for_cgfont (CGFontRef font);
+[Lua] <ni>not implemented</ni>
+</pre></li>
+
+<li><pre>
+[C]   <a href="#cairo_font_face_t">cairo_font_face_t</a> * cairo_quartz_font_face_create_for_atsu_font_id (ATSUFontID font_id);
+[Lua] <ni>not implemented</ni>
+</pre></li>
+
+</ul>
+
+<h2><a name="ft_font">FT</a></h2>
+
+<ul>
+
+<li><pre>
+[C]   <a href="#cairo_font_face_t">cairo_font_face_t</a> * cairo_ft_font_face_create_for_pattern (FcPattern *pattern);
+[Lua] <ni>not implemented</ni>
+</pre></li>
+
+<li><pre>
+[C]   void cairo_ft_font_options_substitute (const <a href="#cairo_font_options_t">cairo_font_options_t</a> *options, FcPattern *pattern);
+[Lua] <ni>not implemented</ni>
+</pre></li>
+
+<li><pre>
+[C]   <a href="#cairo_font_face_t">cairo_font_face_t</a> * cairo_ft_font_face_create_for_ft_face (FT_Face face, int load_flags);
+[Lua] <ni>not implemented</ni>
+</pre></li>
+
+<li><pre>
+[C]   FT_Face cairo_ft_scaled_font_lock_face (<a href="#cairo_scaled_font_t">cairo_scaled_font_t</a> *scaled_font);
+[Lua] <ni>not implemented</ni>
+</pre></li>
+
+<li><pre>
+[C]   void cairo_ft_scaled_font_unlock_face (<a href="#cairo_scaled_font_t">cairo_scaled_font_t</a> *scaled_font);
+[Lua] <ni>not implemented</ni>
+</pre></li>
+
+</ul>
+
+
+<h2><a name="region">Region functions</a></h2>
+Cairo-1.10.0<br />
+<ul>
+
+<li><pre>
+[C]   <a href="#cairo_region_t">cairo_region_t</a> * cairo_region_create (void);
+[Lua] <lud>reg</lud> = cairo.region_create()
+</pre></li>
+
+<li><pre>
+[C]   <a href="#cairo_region_t">cairo_region_t</a> * cairo_region_create_rectangle (const <a href="#cairo_rectangle_int_t">cairo_rectangle_int_t</a> *rectangle);
+[Lua] <lud>reg</lud> = cairo.region_create_rectangle(<ud>rectangle</ud>)
+</pre></li>
+
+<li><pre>
+[C]   <a href="#cairo_region_t">cairo_region_t</a> * cairo_region_create_rectangles (const <a href="#cairo_rectangle_int_t">cairo_rectangle_int_t</a> *rects, int count);
+[Lua] <ni>not implemented</ni>
+</pre></li>
+
+<li><pre>
+[C]   <a href="#cairo_region_t">cairo_region_t</a> * cairo_region_copy (const <a href="#cairo_region_t">cairo_region_t</a> *original);
+[Lua] <lud>reg</lud> = cairo.region_copy(<lud>original</lud>)
+</pre></li>
+
+<li><pre>
+[C]   <a href="#cairo_region_t">cairo_region_t</a> * cairo_region_reference (<a href="#cairo_region_t">cairo_region_t</a> *region);
+[Lua] <lud>reg</lud> = cairo.region_reference(<lud>region</lud>)
+</pre></li>
+
+<li><pre>
+[C]   void cairo_region_destroy (<a href="#cairo_region_t">cairo_region_t</a> *region);
+[Lua] cairo.region_destroy(<lud>region</lud>)
+</pre></li>
+
+<li><pre>
+[C]   <a href="#cairo_bool_t">cairo_bool_t</a> cairo_region_equal (const <a href="#cairo_region_t">cairo_region_t</a> *a, const <a href="#cairo_region_t">cairo_region_t</a> *b);
+[Lua] bool = cairo.region_equal(<lud>a</lud>, <lud>b</lud>)
+</pre></li>
+
+<li><pre>
+[C]   <a href="#cairo_status_t">cairo_status_t</a> cairo_region_status (const <a href="#cairo_region_t">cairo_region_t</a> *region);
+[Lua] int = cairo.region_status(<lud>region</lud>)
+</pre></li>
+
+<li><pre>
+[C]   void cairo_region_get_extents (const <a href="#cairo_region_t">cairo_region_t</a> *region, <a href="#cairo_rectangle_int_t">cairo_rectangle_int_t</a> *extents);
+[Lua] cairo.region_get_extents(<lud>region</lud>, <ud>extents</ud>)
+</pre></li>
+
+<li><pre>
+[C]   int cairo_region_num_rectangles (const <a href="#cairo_region_t">cairo_region_t</a> *region);
+[Lua] int = cairo.region_num_rectangles(<lud>region</lud>)
+</pre></li>
+
+<li><pre>
+[C]   void cairo_region_get_rectangle (const <a href="#cairo_region_t">cairo_region_t</a> *region, int nth, <a href="#cairo_rectangle_int_t">cairo_rectangle_int_t</a> *rectangle);
+[Lua] cairo.region_get_rectangle(<lud>region</lud>, nth, <ud>rectangle</ud>)
+</pre></li>
+
+<li><pre>
+[C]   <a href="#cairo_bool_t">cairo_bool_t</a> cairo_region_is_empty (const <a href="#cairo_region_t">cairo_region_t</a> *region);
+[Lua] bool = cairo.region_is_empty(<lud>region</lud>)
+</pre></li>
+
+<li><pre>
+[C]   <a href="#cairo_region_overlap_t">cairo_region_overlap_t</a> cairo_region_contains_rectangle (const <a href="#cairo_region_t">cairo_region_t</a> *region, const <a href="#cairo_rectangle_int_t">cairo_rectangle_int_t</a> *rectangle);
+[Lua] int = cairo.region_contains_rectangle(<lud>region</lud>, <ud>rectangle</ud>)
+</pre></li>
+
+<li><pre>
+[C]   <a href="#cairo_bool_t">cairo_bool_t</a> cairo_region_contains_point (const <a href="#cairo_region_t">cairo_region_t</a> *region, int x, int y);
+[Lua] bool = cairo.region_contains_point(<lud>region</lud>, x, y)
+</pre></li>
+
+<li><pre>
+[C]   void cairo_region_translate (<a href="#cairo_region_t">cairo_region_t</a> *region, int dx, int dy);
+[Lua] cairo.region_translate(<lud>region</lud>, dx, dy)
+</pre></li>
+
+<li><pre>
+[C]   <a href="#cairo_status_t">cairo_status_t</a> cairo_region_subtract (<a href="#cairo_region_t">cairo_region_t</a> *dst, const <a href="#cairo_region_t">cairo_region_t</a> *other);
+[Lua] int = cairo.region_subtract(<lud>dst</lud>, <lud>other</lud>)
+</pre></li>
+
+<li><pre>
+[C]   <a href="#cairo_status_t">cairo_status_t</a> cairo_region_subtract_rectangle (<a href="#cairo_region_t">cairo_region_t</a> *dst, const <a href="#cairo_rectangle_int_t">cairo_rectangle_int_t</a> *rectangle);
+[Lua] int = cairo.region_subtract_rectangle(<lud>dst</lud>, <ud>rectangle</ud>)
+</pre></li>
+
+<li><pre>
+[C]   <a href="#cairo_status_t">cairo_status_t</a> cairo_region_intersect (<a href="#cairo_region_t">cairo_region_t</a> *dst, const <a href="#cairo_region_t">cairo_region_t</a> *other);
+[Lua] int = cairo.region_intersect(<lud>dst</lud>, <lud>other</lud>)
+</pre></li>
+
+<li><pre>
+[C]   <a href="#cairo_status_t">cairo_status_t</a> cairo_region_intersect_rectangle (<a href="#cairo_region_t">cairo_region_t</a> *dst, const <a href="#cairo_rectangle_int_t">cairo_rectangle_int_t</a> *rectangle);
+[Lua] int = cairo.region_intersect_rectangle(<lud>dst</lud>, <ud>rectangle</ud>)
+</pre></li>
+
+<li><pre>
+[C]   <a href="#cairo_status_t">cairo_status_t</a> cairo_region_union (<a href="#cairo_region_t">cairo_region_t</a> *dst, const <a href="#cairo_region_t">cairo_region_t</a> *other);
+[Lua] int = cairo.region_union(<lud>dst</lud>, <lud>other</lud>)
+</pre></li>
+
+<li><pre>
+[C]   <a href="#cairo_status_t">cairo_status_t</a> cairo_region_union_rectangle (<a href="#cairo_region_t">cairo_region_t</a> *dst, const <a href="#cairo_rectangle_int_t">cairo_rectangle_int_t</a> *rectangle);
+[Lua] int = cairo.region_union_rectangle(<lud>dst</lud>, <ud>rectangle</ud>)
+</pre></li>
+
+<li><pre>
+[C]   <a href="#cairo_status_t">cairo_status_t</a> cairo_region_xor (<a href="#cairo_region_t">cairo_region_t</a> *dst, const <a href="#cairo_region_t">cairo_region_t</a> *other);
+[Lua] int = cairo.region_xor(<lud>dst</lud>, <lud>other</lud>)
+</pre></li>
+
+<li><pre>
+[C]   <a href="#cairo_status_t">cairo_status_t</a> cairo_region_xor_rectangle (<a href="#cairo_region_t">cairo_region_t</a> *dst, const <a href="#cairo_rectangle_int_t">cairo_rectangle_int_t</a> *rectangle);
+[Lua] int = cairo.region_xor_rectangle(<lud>dst</lud>, <ud>rectangle</ud>)
+</pre></li>
+
+</ul>
+
+
+<h2><a name="device">Device functions</a></h2>
+Cairo-1.10.0<br />
+<ul>
+
+<li><pre>
+[C]   <a href="#cairo_device_t">cairo_device_t</a> * cairo_device_reference (<a href="#cairo_device_t">cairo_device_t</a> *device);
+[Lua] <lud>dev</lud> = cairo.device_reference(<lud>device</lud>)
+</pre></li>
+
+<li><pre>
+[C]   <a href="#cairo_device_type_t">cairo_device_type_t</a> cairo_device_get_type (<a href="#cairo_device_t">cairo_device_t</a> *device);
+[Lua] int = cairo.device_get_type(<lud>device</lud>)
+</pre></li>
+
+<li><pre>
+[C]   <a href="#cairo_status_t">cairo_status_t</a> cairo_device_status (<a href="#cairo_device_t">cairo_device_t</a> *device);
+[Lua] int = cairo.device_status(<lud>device</lud>)
+</pre></li>
+
+<li><pre>
+[C]   <a href="#cairo_status_t">cairo_status_t</a> cairo_device_acquire (<a href="#cairo_device_t">cairo_device_t</a> *device);
+[Lua] int = cairo.device_acquire(<lud>device</lud>)
+</pre></li>
+
+<li><pre>
+[C]   void cairo_device_release (<a href="#cairo_device_t">cairo_device_t</a> *device);
+[Lua] cairo.device_release(<lud>device</lud>)
+</pre></li>
+
+<li><pre>
+[C]   void cairo_device_flush (<a href="#cairo_device_t">cairo_device_t</a> *device);
+[Lua] cairo.device_flush(<lud>device</lud>)
+</pre></li>
+
+<li><pre>
+[C]   void cairo_device_finish (<a href="#cairo_device_t">cairo_device_t</a> *device);
+[Lua] cairo.device_finish(<lud>device</lud>)
+</pre></li>
+
+<li><pre>
+[C]   void cairo_device_destroy (<a href="#cairo_device_t">cairo_device_t</a> *device);
+[Lua] cairo.device_destroy(<lud>device</lud>)
+</pre></li>
+
+<li><pre>
+[C]   unsigned int cairo_device_get_reference_count (<a href="#cairo_device_t">cairo_device_t</a> *device);
+[Lua] int = cairo.device_get_reference_count(<lud>device</lud>)
+</pre></li>
+
+<li><pre>
+[C]   void * cairo_device_get_user_data (<a href="#cairo_device_t">cairo_device_t</a> *device, const <a href="#cairo_user_data_key_t">cairo_user_data_key_t</a> *key);
+[Lua] <ni>not implemented</ni>
+</pre></li>
+
+<li><pre>
+[C]   <a href="#cairo_status_t">cairo_status_t</a> cairo_device_set_user_data (<a href="#cairo_device_t">cairo_device_t</a> *device, const <a href="#cairo_user_data_key_t">cairo_user_data_key_t</a> *key, void *user_data, <a href="#cairo_destroy_func_t">cairo_destroy_func_t</a> destroy);
+[Lua] <ni>not implemented</ni>
+</pre></li>
+
+</ul>
+
+
+<h2><a name="types">Types</a></h2>
+
+
+<a name="cairo_bool_t">cairo_bool_t</a><div class="block"><pre>
+ *
+ * #cairo_bool_t is used for boolean values. Returns of type
+ * #cairo_bool_t will always be either 0 or 1, but testing against
+ * these values explicitly is not encouraged; just use the
+ * value as a boolean condition.
+ *
+ * <informalexample><programlisting>
+ *  if (cairo_in_stroke (cr, x, y)) {
+ *      /<!-- -->* do something *<!-- -->/
+ *  }
+ * </programlisting></informalexample>
+
+</pre></div></br>
+
+<a name="cairo_t">cairo_t</a><div class="block"><pre>
+ *
+ * A #cairo_t contains the current state of the rendering device,
+ * including coordinates of yet to be drawn shapes.
+ *
+ * Cairo contexts, as #cairo_t objects are named, are central to
+ * cairo and all drawing with cairo is always done to a #cairo_t
+ * object.
+ *
+ * Memory management of #cairo_t is done with
+ * cairo_reference() and cairo_destroy().
+
+</pre></div></br>
+
+<a name="cairo_surface_t">cairo_surface_t</a><div class="block"><pre>
+ *
+ * A #cairo_surface_t represents an image, either as the destination
+ * of a drawing operation or as source when drawing onto another
+ * surface.  To draw to a #cairo_surface_t, create a cairo context
+ * with the surface as the target, using cairo_create().
+ *
+ * There are different subtypes of #cairo_surface_t for
+ * different drawing backends; for example, cairo_image_surface_create()
+ * creates a bitmap image in memory.
+ * The type of a surface can be queried with cairo_surface_get_type().
+ *
+ * Memory management of #cairo_surface_t is done with
+ * cairo_surface_reference() and cairo_surface_destroy().
+
+</pre></div></br>
+
+<a name="cairo_device_t">cairo_device_t</a><div class="block"><pre>
+ * 
+ * A #cairo_device_t represents the driver interface for drawing
+ * operations to a #cairo_surface_t.  There are different subtypes of
+ * #cairo_device_t for different drawing backends; for example,
+ * cairo_xcb_device_create() creates a device that wraps the connection
+ * to an X Windows System using the XCB library.
+ *
+ * The type of a device can be queried with cairo_device_get_type().
+ *
+ * Memory management of #cairo_device_t is done with
+ * cairo_device_reference() and cairo_device_destroy().
+ *
+ * Since: 1.10
+
+</pre></div></br>
+
+<a name="cairo_matrix_t">cairo_matrix_t</a><div class="block"><pre>
+<ul><li><pre><b>
+ [Lua] Implemented as user data
+       local matrix = cairo.Matrix()
+       local matrix = cairo.Matrix{<op>xx=num,</op> <op>yx=num,</op> <op>xy=num,</op> <op>yy=num,</op> <op>x0=num,</op> <op>y0=num</op>}
+</b></pre></li></ul>
+ *
+ * @xx: xx component of the affine transformation
+ * @yx: yx component of the affine transformation
+ * @xy: xy component of the affine transformation
+ * @yy: yy component of the affine transformation
+ * @x0: X translation component of the affine transformation
+ * @y0: Y translation component of the affine transformation
+ *
+ * A #cairo_matrix_t holds an affine transformation, such as a scale,
+ * rotation, shear, or a combination of those. The transformation of
+ * a point (x, y) is given by:
+ * <programlisting>
+ *     x_new = xx * x + xy * y + x0;
+ *     y_new = yx * x + yy * y + y0;
+ * </programlisting>
+
+</pre></div></br>
+
+<a name="cairo_pattern_t">cairo_pattern_t</a><div class="block"><pre>
+ *
+ * A #cairo_pattern_t represents a source when drawing onto a
+ * surface. There are different subtypes of #cairo_pattern_t,
+ * for different types of sources; for example,
+ * cairo_pattern_create_rgb() creates a pattern for a solid
+ * opaque color.
+ *
+ * Other than various cairo_pattern_create_<emphasis>type</emphasis>
+ * functions, some of the pattern types can be implicitly created
+ * using vairous cairo_set_source_<emphasis>type</emphasis> functions;
+ * for example cairo_set_source_rgb().
+ *
+ * The type of a pattern can be queried with cairo_pattern_get_type().
+ *
+ * Memory management of #cairo_pattern_t is done with
+ * cairo_pattern_reference() and cairo_pattern_destroy().
+
+</pre></div></br>
+
+<a name="cairo_destroy_func_t">cairo_destroy_func_t</a><div class="block"><pre>
+ * 
+ * @data: The data element being destroyed.
+ *
+ * #cairo_destroy_func_t the type of function which is called when a
+ * data element is destroyed. It is passed the pointer to the data
+ * element and should free any memory and resources allocated for it.
+
+</pre></div></br>
+
+<a name="cairo_user_data_key_t">cairo_user_data_key_t</a><div class="block"><pre>
+ * 
+ * @unused: not used; ignore.
+ *
+ * #cairo_user_data_key_t is used for attaching user data to cairo
+ * data structures.  The actual contents of the struct is never used,
+ * and there is no need to initialize the object; only the unique
+ * address of a #cairo_data_key_t object is used.  Typically, you
+ * would just use the address of a static #cairo_data_key_t object.
+
+</pre></div></br>
+
+<a name="cairo_status_t">cairo_status_t</a><div class="block"><pre>
+ * 
+ * @CAIRO_STATUS_SUCCESS: no error has occurred
+ * @CAIRO_STATUS_NO_MEMORY: out of memory
+ * @CAIRO_STATUS_INVALID_RESTORE: cairo_restore() called without matching cairo_save()
+ * @CAIRO_STATUS_INVALID_POP_GROUP: no saved group to pop, i.e. cairo_pop_group() without matching cairo_push_group()
+ * @CAIRO_STATUS_NO_CURRENT_POINT: no current point defined
+ * @CAIRO_STATUS_INVALID_MATRIX: invalid matrix (not invertible)
+ * @CAIRO_STATUS_INVALID_STATUS: invalid value for an input #cairo_status_t
+ * @CAIRO_STATUS_NULL_POINTER: %NULL pointer
+ * @CAIRO_STATUS_INVALID_STRING: input string not valid UTF-8
+ * @CAIRO_STATUS_INVALID_PATH_DATA: input path data not valid
+ * @CAIRO_STATUS_READ_ERROR: error while reading from input stream
+ * @CAIRO_STATUS_WRITE_ERROR: error while writing to output stream
+ * @CAIRO_STATUS_SURFACE_FINISHED: target surface has been finished
+ * @CAIRO_STATUS_SURFACE_TYPE_MISMATCH: the surface type is not appropriate for the operation
+ * @CAIRO_STATUS_PATTERN_TYPE_MISMATCH: the pattern type is not appropriate for the operation
+ * @CAIRO_STATUS_INVALID_CONTENT: invalid value for an input #cairo_content_t
+ * @CAIRO_STATUS_INVALID_FORMAT: invalid value for an input #cairo_format_t
+ * @CAIRO_STATUS_INVALID_VISUAL: invalid value for an input Visual*
+ * @CAIRO_STATUS_FILE_NOT_FOUND: file not found
+ * @CAIRO_STATUS_INVALID_DASH: invalid value for a dash setting
+ * @CAIRO_STATUS_INVALID_DSC_COMMENT: invalid value for a DSC comment (Since 1.2)
+ * @CAIRO_STATUS_INVALID_INDEX: invalid index passed to getter (Since 1.4)
+ * @CAIRO_STATUS_CLIP_NOT_REPRESENTABLE: clip region not representable in desired format (Since 1.4)
+ * @CAIRO_STATUS_TEMP_FILE_ERROR: error creating or writing to a temporary file (Since 1.6)
+ * @CAIRO_STATUS_INVALID_STRIDE: invalid value for stride (Since 1.6)
+ * @CAIRO_STATUS_FONT_TYPE_MISMATCH: the font type is not appropriate for the operation (Since 1.8)
+ * @CAIRO_STATUS_USER_FONT_IMMUTABLE: the user-font is immutable (Since 1.8)
+ * @CAIRO_STATUS_USER_FONT_ERROR: error occurred in a user-font callback function (Since 1.8)
+ * @CAIRO_STATUS_NEGATIVE_COUNT: negative number used where it is not allowed (Since 1.8)
+ * @CAIRO_STATUS_INVALID_CLUSTERS: input clusters do not represent the accompanying text and glyph array (Since 1.8)
+ * @CAIRO_STATUS_INVALID_SLANT: invalid value for an input #cairo_font_slant_t (Since 1.8)
+ * @CAIRO_STATUS_INVALID_WEIGHT: invalid value for an input #cairo_font_weight_t (Since 1.8)
+ * @CAIRO_STATUS_INVALID_SIZE: invalid value (typically too big) for the size of the input (surface, pattern, etc.) (Since 1.10)
+ * @CAIRO_STATUS_USER_FONT_NOT_IMPLEMENTED: user-font method not implemented (Since 1.10)
+ * @CAIRO_STATUS_DEVICE_TYPE_MISMATCH: the device type is not appropriate for the operation (Since 1.10)
+ * @CAIRO_STATUS_DEVICE_ERROR: an operation to the device caused an unspecified error (Since 1.10)
+ * @CAIRO_STATUS_LAST_STATUS: this is a special value indicating the number of
+ *   status values defined in this enumeration.  When using this value, note
+ *   that the version of cairo at run-time may have additional status values
+ *   defined than the value of this symbol at compile-time. (Since 1.10)
+ *
+ * #cairo_status_t is used to indicate errors that can occur when
+ * using Cairo. In some cases it is returned directly by functions.
+ * but when using #cairo_t, the last error, if any, is stored in
+ * the context and can be retrieved with cairo_status().
+ *
+ * New entries may be added in future versions.  Use cairo_status_to_string()
+ * to get a human-readable representation of an error message.
+
+</pre></div></br>
+
+<a name="cairo_content_t">cairo_content_t</a><div class="block"><pre>
+ * 
+ * @CAIRO_CONTENT_COLOR: The surface will hold color content only.
+ * @CAIRO_CONTENT_ALPHA: The surface will hold alpha content only.
+ * @CAIRO_CONTENT_COLOR_ALPHA: The surface will hold color and alpha content.
+ *
+ * #cairo_content_t is used to describe the content that a surface will
+ * contain, whether color information, alpha information (translucence
+ * vs. opacity), or both.
+ *
+ * Note: The large values here are designed to keep #cairo_content_t
+ * values distinct from #cairo_format_t values so that the
+ * implementation can detect the error if users confuse the two types.
+
+</pre></div></br>
+
+<a name="cairo_write_func_t">cairo_write_func_t</a><div class="block"><pre>
+ * 
+ * @closure: the output closure
+ * @data: the buffer containing the data to write
+ * @length: the amount of data to write
+ *
+ * #cairo_write_func_t is the type of function which is called when a
+ * backend needs to write data to an output stream.  It is passed the
+ * closure which was specified by the user at the time the write
+ * function was registered, the data to write and the length of the
+ * data in bytes.  The write function should return
+ * %CAIRO_STATUS_SUCCESS if all the data was successfully written,
+ * %CAIRO_STATUS_WRITE_ERROR otherwise.
+ *
+ * Returns: the status code of the write operation
+
+</pre></div></br>
+
+<a name="cairo_read_func_t">cairo_read_func_t</a><div class="block"><pre>
+ * 
+ * @closure: the input closure
+ * @data: the buffer into which to read the data
+ * @length: the amount of data to read
+ *
+ * #cairo_read_func_t is the type of function which is called when a
+ * backend needs to read data from an input stream.  It is passed the
+ * closure which was specified by the user at the time the read
+ * function was registered, the buffer to read the data into and the
+ * length of the data in bytes.  The read function should return
+ * %CAIRO_STATUS_SUCCESS if all the data was successfully read,
+ * %CAIRO_STATUS_READ_ERROR otherwise.
+ *
+ * Returns: the status code of the read operation
+
+</pre></div></br>
+
+<a name="cairo_operator_t">cairo_operator_t</a><div class="block"><pre>
+ * 
+ * @CAIRO_OPERATOR_CLEAR: clear destination layer (bounded)
+ * @CAIRO_OPERATOR_SOURCE: replace destination layer (bounded)
+ * @CAIRO_OPERATOR_OVER: draw source layer on top of destination layer
+ * (bounded)
+ * @CAIRO_OPERATOR_IN: draw source where there was destination content
+ * (unbounded)
+ * @CAIRO_OPERATOR_OUT: draw source where there was no destination
+ * content (unbounded)
+ * @CAIRO_OPERATOR_ATOP: draw source on top of destination content and
+ * only there
+ * @CAIRO_OPERATOR_DEST: ignore the source
+ * @CAIRO_OPERATOR_DEST_OVER: draw destination on top of source
+ * @CAIRO_OPERATOR_DEST_IN: leave destination only where there was
+ * source content (unbounded)
+ * @CAIRO_OPERATOR_DEST_OUT: leave destination only where there was no
+ * source content
+ * @CAIRO_OPERATOR_DEST_ATOP: leave destination on top of source content
+ * and only there (unbounded)
+ * @CAIRO_OPERATOR_XOR: source and destination are shown where there is only
+ * one of them
+ * @CAIRO_OPERATOR_ADD: source and destination layers are accumulated
+ * @CAIRO_OPERATOR_SATURATE: like over, but assuming source and dest are
+ * disjoint geometries
+ * @CAIRO_OPERATOR_MULTIPLY: source and destination layers are multiplied.
+ * This causes the result to be at least as dark as the darker inputs.
+ * @CAIRO_OPERATOR_SCREEN: source and destination are complemented and
+ * multiplied. This causes the result to be at least as light as the lighter
+ * inputs.
+ * @CAIRO_OPERATOR_OVERLAY: multiplies or screens, depending on the
+ * lightness of the destination color.
+ * @CAIRO_OPERATOR_DARKEN: replaces the destination with the source if it
+ * is darker, otherwise keeps the source.
+ * @CAIRO_OPERATOR_LIGHTEN: replaces the destination with the source if it
+ * is lighter, otherwise keeps the source.
+ * @CAIRO_OPERATOR_COLOR_DODGE: brightens the destination color to reflect
+ * the source color.
+ * @CAIRO_OPERATOR_COLOR_BURN: darkens the destination color to reflect
+ * the source color.
+ * @CAIRO_OPERATOR_HARD_LIGHT: Multiplies or screens, dependant on source
+ * color.
+ * @CAIRO_OPERATOR_SOFT_LIGHT: Darkens or lightens, dependant on source
+ * color.
+ * @CAIRO_OPERATOR_DIFFERENCE: Takes the difference of the source and
+ * destination color.
+ * @CAIRO_OPERATOR_EXCLUSION: Produces an effect similar to difference, but
+ * with lower contrast.
+ * @CAIRO_OPERATOR_HSL_HUE: Creates a color with the hue of the source
+ * and the saturation and luminosity of the target.
+ * @CAIRO_OPERATOR_HSL_SATURATION: Creates a color with the saturation
+ * of the source and the hue and luminosity of the target. Painting with
+ * this mode onto a gray area prduces no change.
+ * @CAIRO_OPERATOR_HSL_COLOR: Creates a color with the hue and saturation
+ * of the source and the luminosity of the target. This preserves the gray
+ * levels of the target and is useful for coloring monochrome images or
+ * tinting color images.
+ * @CAIRO_OPERATOR_HSL_LUMINOSITY: Creates a color with the luminosity of
+ * the source and the hue and saturation of the target. This produces an
+ * inverse effect to @CAIRO_OPERATOR_HSL_COLOR.
+ *
+ * #cairo_operator_t is used to set the compositing operator for all cairo
+ * drawing operations.
+ *
+ * The default operator is %CAIRO_OPERATOR_OVER.
+ *
+ * The operators marked as <firstterm>unbounded</firstterm> modify their
+ * destination even outside of the mask layer (that is, their effect is not
+ * bound by the mask layer).  However, their effect can still be limited by
+ * way of clipping.
+ *
+ * To keep things simple, the operator descriptions here
+ * document the behavior for when both source and destination are either fully
+ * transparent or fully opaque.  The actual implementation works for
+ * translucent layers too.
+ * For a more detailed explanation of the effects of each operator, including
+ * the mathematical definitions, see
+ * <ulink url="http://cairographics.org/operators/">http://cairographics.org/operators/</ulink>.
+
+</pre></div></br>
+
+<a name="cairo_antialias_t">cairo_antialias_t</a><div class="block"><pre>
+ * 
+ * @CAIRO_ANTIALIAS_DEFAULT: Use the default antialiasing for
+ *   the subsystem and target device
+ * @CAIRO_ANTIALIAS_NONE: Use a bilevel alpha mask
+ * @CAIRO_ANTIALIAS_GRAY: Perform single-color antialiasing (using
+ *  shades of gray for black text on a white background, for example).
+ * @CAIRO_ANTIALIAS_SUBPIXEL: Perform antialiasing by taking
+ *  advantage of the order of subpixel elements on devices
+ *  such as LCD panels
+ *
+ * Specifies the type of antialiasing to do when rendering text or shapes.
+
+</pre></div></br>
+
+<a name="cairo_fill_rule_t">cairo_fill_rule_t</a><div class="block"><pre>
+ * 
+ * @CAIRO_FILL_RULE_WINDING: If the path crosses the ray from
+ * left-to-right, counts +1. If the path crosses the ray
+ * from right to left, counts -1. (Left and right are determined
+ * from the perspective of looking along the ray from the starting
+ * point.) If the total count is non-zero, the point will be filled.
+ * @CAIRO_FILL_RULE_EVEN_ODD: Counts the total number of
+ * intersections, without regard to the orientation of the contour. If
+ * the total number of intersections is odd, the point will be
+ * filled.
+ *
+ * #cairo_fill_rule_t is used to select how paths are filled. For both
+ * fill rules, whether or not a point is included in the fill is
+ * determined by taking a ray from that point to infinity and looking
+ * at intersections with the path. The ray can be in any direction,
+ * as long as it doesn't pass through the end point of a segment
+ * or have a tricky intersection such as intersecting tangent to the path.
+ * (Note that filling is not actually implemented in this way. This
+ * is just a description of the rule that is applied.)
+ *
+ * The default fill rule is %CAIRO_FILL_RULE_WINDING.
+ *
+ * New entries may be added in future versions.
+
+</pre></div></br>
+
+<a name="cairo_line_cap_t">cairo_line_cap_t</a><div class="block"><pre>
+ * 
+ * @CAIRO_LINE_CAP_BUTT: start(stop) the line exactly at the start(end) point
+ * @CAIRO_LINE_CAP_ROUND: use a round ending, the center of the circle is the end point
+ * @CAIRO_LINE_CAP_SQUARE: use squared ending, the center of the square is the end point
+ *
+ * Specifies how to render the endpoints of the path when stroking.
+ *
+ * The default line cap style is %CAIRO_LINE_CAP_BUTT.
+
+</pre></div></br>
+
+<a name="cairo_line_join_t">cairo_line_join_t</a><div class="block"><pre>
+ * 
+ * @CAIRO_LINE_JOIN_MITER: use a sharp (angled) corner, see
+ * cairo_set_miter_limit()
+ * @CAIRO_LINE_JOIN_ROUND: use a rounded join, the center of the circle is the
+ * joint point
+ * @CAIRO_LINE_JOIN_BEVEL: use a cut-off join, the join is cut off at half
+ * the line width from the joint point
+ *
+ * Specifies how to render the junction of two lines when stroking.
+ *
+ * The default line join style is %CAIRO_LINE_JOIN_MITER.
+
+</pre></div></br>
+
+<a name="cairo_rectangle_t">cairo_rectangle_t</a><div class="block"><pre>
+ * 
+ * @x: X coordinate of the left side of the rectangle
+ * @y: Y coordinate of the the top side of the rectangle
+ * @width: width of the rectangle
+ * @height: height of the rectangle
+ *
+ * A data structure for holding a rectangle.
+ *
+ * Since: 1.4
+
+</pre></div></br>
+
+<a name="cairo_rectangle_list_t">cairo_rectangle_list_t</a><div class="block"><pre>
+ * 
+ * @status: Error status of the rectangle list
+ * @rectangles: Array containing the rectangles
+ * @num_rectangles: Number of rectangles in this list
+ * 
+ * A data structure for holding a dynamically allocated
+ * array of rectangles.
+ *
+ * Since: 1.4
+
+</pre></div></br>
+
+<a name="cairo_scaled_font_t">cairo_scaled_font_t</a><div class="block"><pre>
+ *
+ * A #cairo_scaled_font_t is a font scaled to a particular size and device
+ * resolution. A #cairo_scaled_font_t is most useful for low-level font
+ * usage where a library or application wants to cache a reference
+ * to a scaled font to speed up the computation of metrics.
+ *
+ * There are various types of scaled fonts, depending on the
+ * <firstterm>font backend</firstterm> they use. The type of a
+ * scaled font can be queried using cairo_scaled_font_get_type().
+ *
+ * Memory management of #cairo_scaled_font_t is done with
+ * cairo_scaled_font_reference() and cairo_scaled_font_destroy().
+
+</pre></div></br>
+
+<a name="cairo_font_face_t">cairo_font_face_t</a><div class="block"><pre>
+ *
+ * A #cairo_font_face_t specifies all aspects of a font other
+ * than the size or font matrix (a font matrix is used to distort
+ * a font by sheering it or scaling it unequally in the two
+ * directions) . A font face can be set on a #cairo_t by using
+ * cairo_set_font_face(); the size and font matrix are set with
+ * cairo_set_font_size() and cairo_set_font_matrix().
+ *
+ * There are various types of font faces, depending on the
+ * <firstterm>font backend</firstterm> they use. The type of a
+ * font face can be queried using cairo_font_face_get_type().
+ *
+ * Memory management of #cairo_font_face_t is done with
+ * cairo_font_face_reference() and cairo_font_face_destroy().
+
+</pre></div></br>
+
+<a name="cairo_glyph_t">cairo_glyph_t</a><div class="block"><pre>
+ * 
+ * @index: glyph index in the font. The exact interpretation of the
+ *      glyph index depends on the font technology being used.
+ * @x: the offset in the X direction between the origin used for
+ *     drawing or measuring the string and the origin of this glyph.
+ * @y: the offset in the Y direction between the origin used for
+ *     drawing or measuring the string and the origin of this glyph.
+ *
+ * The #cairo_glyph_t structure holds information about a single glyph
+ * when drawing or measuring text. A font is (in simple terms) a
+ * collection of shapes used to draw text. A glyph is one of these
+ * shapes. There can be multiple glyphs for a single character
+ * (alternates to be used in different contexts, for example), or a
+ * glyph can be a <firstterm>ligature</firstterm> of multiple
+ * characters. Cairo doesn't expose any way of converting input text
+ * into glyphs, so in order to use the Cairo interfaces that take
+ * arrays of glyphs, you must directly access the appropriate
+ * underlying font system.
+ *
+ * Note that the offsets given by @x and @y are not cumulative. When
+ * drawing or measuring text, each glyph is individually positioned
+ * with respect to the overall origin
+
+</pre></div></br>
+
+<a name="cairo_text_extents_t">cairo_text_extents_t</a><div class="block"><pre>
+<ul><li><pre><b>
+ [Lua] Implemented as user data
+       local te = cairo.TextExtents()
+       local te = cairo.TextExtents{<op>x_bearing=num,</op> <op>y_bearing=num,</op> <op>width=num,</op> <op>height=num,</op> <op>x_advance=num,</op> <op>y_advance=num</op>}
+</b></pre></li></ul>
+ *
+ * @x_bearing: the horizontal distance from the origin to the
+ *   leftmost part of the glyphs as drawn. Positive if the
+ *   glyphs lie entirely to the right of the origin.
+ * @y_bearing: the vertical distance from the origin to the
+ *   topmost part of the glyphs as drawn. Positive only if the
+ *   glyphs lie completely below the origin; will usually be
+ *   negative.
+ * @width: width of the glyphs as drawn
+ * @height: height of the glyphs as drawn
+ * @x_advance:distance to advance in the X direction
+ *    after drawing these glyphs
+ * @y_advance: distance to advance in the Y direction
+ *   after drawing these glyphs. Will typically be zero except
+ *   for vertical text layout as found in East-Asian languages.
+ *
+ * The #cairo_text_extents_t structure stores the extents of a single
+ * glyph or a string of glyphs in user-space coordinates. Because text
+ * extents are in user-space coordinates, they are mostly, but not
+ * entirely, independent of the current transformation matrix. If you call
+ * <literal>cairo_scale(cr, 2.0, 2.0)</literal>, text will
+ * be drawn twice as big, but the reported text extents will not be
+ * doubled. They will change slightly due to hinting (so you can't
+ * assume that metrics are independent of the transformation matrix),
+ * but otherwise will remain unchanged.
+
+</pre></div></br>
+
+<a name="cairo_font_extents_t">cairo_font_extents_t</a><div class="block"><pre>
+<ul><li><pre><b>
+ [Lua] Implemented as user data
+       local fe = cairo.FontExtents()
+       local fe = cairo.FontExtents{<op>ascent=num,</op> <op>descent=num,</op> <op>height=num,</op> <op>max_x_advance=num,</op> <op>max_y_advance=num</op>}
+</b></pre></li></ul>
+ *
+ * @ascent: the distance that the font extends above the baseline.
+ *          Note that this is not always exactly equal to the maximum
+ *          of the extents of all the glyphs in the font, but rather
+ *          is picked to express the font designer's intent as to
+ *          how the font should align with elements above it.
+ * @descent: the distance that the font extends below the baseline.
+ *           This value is positive for typical fonts that include
+ *           portions below the baseline. Note that this is not always
+ *           exactly equal to the maximum of the extents of all the
+ *           glyphs in the font, but rather is picked to express the
+ *           font designer's intent as to how the the font should
+ *           align with elements below it.
+ * @height: the recommended vertical distance between baselines when
+ *          setting consecutive lines of text with the font. This
+ *          is greater than @ascent+@descent by a
+ *          quantity known as the <firstterm>line spacing</firstterm>
+ *          or <firstterm>external leading</firstterm>. When space
+ *          is at a premium, most fonts can be set with only
+ *          a distance of @ascent+@descent between lines.
+ * @max_x_advance: the maximum distance in the X direction that
+ *         the the origin is advanced for any glyph in the font.
+ * @max_y_advance: the maximum distance in the Y direction that
+ *         the the origin is advanced for any glyph in the font.
+ *         this will be zero for normal fonts used for horizontal
+ *         writing. (The scripts of East Asia are sometimes written
+ *         vertically.)
+ *
+ * The #cairo_font_extents_t structure stores metric information for
+ * a font. Values are given in the current user-space coordinate
+ * system.
+ *
+ * Because font metrics are in user-space coordinates, they are
+ * mostly, but not entirely, independent of the current transformation
+ * matrix. If you call <literal>cairo_scale(cr, 2.0, 2.0)</literal>,
+ * text will be drawn twice as big, but the reported text extents will
+ * not be doubled. They will change slightly due to hinting (so you
+ * can't assume that metrics are independent of the transformation
+ * matrix), but otherwise will remain unchanged.
+
+</pre></div></br>
+
+<a name="cairo_font_slant_t">cairo_font_slant_t</a><div class="block"><pre>
+ * 
+ * @CAIRO_FONT_SLANT_NORMAL: Upright font style
+ * @CAIRO_FONT_SLANT_ITALIC: Italic font style
+ * @CAIRO_FONT_SLANT_OBLIQUE: Oblique font style
+ *
+ * Specifies variants of a font face based on their slant.
+
+</pre></div></br>
+
+<a name="cairo_font_weight_t">cairo_font_weight_t</a><div class="block"><pre>
+ * 
+ * @CAIRO_FONT_WEIGHT_NORMAL: Normal font weight
+ * @CAIRO_FONT_WEIGHT_BOLD: Bold font weight
+ *
+ * Specifies variants of a font face based on their weight.
+
+</pre></div></br>
+
+<a name="cairo_subpixel_order_t">cairo_subpixel_order_t</a><div class="block"><pre>
+ * 
+ * @CAIRO_SUBPIXEL_ORDER_DEFAULT: Use the default subpixel order for
+ *   for the target device
+ * @CAIRO_SUBPIXEL_ORDER_RGB: Subpixel elements are arranged horizontally
+ *   with red at the left
+ * @CAIRO_SUBPIXEL_ORDER_BGR:  Subpixel elements are arranged horizontally
+ *   with blue at the left
+ * @CAIRO_SUBPIXEL_ORDER_VRGB: Subpixel elements are arranged vertically
+ *   with red at the top
+ * @CAIRO_SUBPIXEL_ORDER_VBGR: Subpixel elements are arranged vertically
+ *   with blue at the top
+ *
+ * The subpixel order specifies the order of color elements within
+ * each pixel on the display device when rendering with an
+ * antialiasing mode of %CAIRO_ANTIALIAS_SUBPIXEL.
+
+</pre></div></br>
+
+<a name="cairo_hint_style_t">cairo_hint_style_t</a><div class="block"><pre>
+ * 
+ * @CAIRO_HINT_STYLE_DEFAULT: Use the default hint style for
+ *   font backend and target device
+ * @CAIRO_HINT_STYLE_NONE: Do not hint outlines
+ * @CAIRO_HINT_STYLE_SLIGHT: Hint outlines slightly to improve
+ *   contrast while retaining good fidelity to the original
+ *   shapes.
+ * @CAIRO_HINT_STYLE_MEDIUM: Hint outlines with medium strength
+ *   giving a compromise between fidelity to the original shapes
+ *   and contrast
+ * @CAIRO_HINT_STYLE_FULL: Hint outlines to maximize contrast
+ *
+ * Specifies the type of hinting to do on font outlines. Hinting
+ * is the process of fitting outlines to the pixel grid in order
+ * to improve the appearance of the result. Since hinting outlines
+ * involves distorting them, it also reduces the faithfulness
+ * to the original outline shapes. Not all of the outline hinting
+ * styles are supported by all font backends.
+ *
+ * New entries may be added in future versions.
+
+</pre></div></br>
+
+<a name="cairo_hint_metrics_t">cairo_hint_metrics_t</a><div class="block"><pre>
+ * 
+ * @CAIRO_HINT_METRICS_DEFAULT: Hint metrics in the default
+ *  manner for the font backend and target device
+ * @CAIRO_HINT_METRICS_OFF: Do not hint font metrics
+ * @CAIRO_HINT_METRICS_ON: Hint font metrics
+ *
+ * Specifies whether to hint font metrics; hinting font metrics
+ * means quantizing them so that they are integer values in
+ * device space. Doing this improves the consistency of
+ * letter and line spacing, however it also means that text
+ * will be laid out differently at different zoom factors.
+
+</pre></div></br>
+
+<a name="cairo_font_options_t">cairo_font_options_t</a><div class="block"><pre>
+ *
+ * An opaque structure holding all options that are used when
+ * rendering fonts.
+ *
+ * Individual features of a #cairo_font_options_t can be set or
+ * accessed using functions named
+ * cairo_font_options_set_<emphasis>feature_name</emphasis> and
+ * cairo_font_options_get_<emphasis>feature_name</emphasis>, like
+ * cairo_font_options_set_antialias() and
+ * cairo_font_options_get_antialias().
+ *
+ * New features may be added to a #cairo_font_options_t in the
+ * future.  For this reason, cairo_font_options_copy(),
+ * cairo_font_options_equal(), cairo_font_options_merge(), and
+ * cairo_font_options_hash() should be used to copy, check
+ * for equality, merge, or compute a hash value of
+ * #cairo_font_options_t objects.
+
+</pre></div></br>
+
+<a name="cairo_font_type_t">cairo_font_type_t</a><div class="block"><pre>
+ * 
+ * @CAIRO_FONT_TYPE_TOY: The font was created using cairo's toy font api
+ * @CAIRO_FONT_TYPE_FT: The font is of type FreeType
+ * @CAIRO_FONT_TYPE_WIN32: The font is of type Win32
+ * @CAIRO_FONT_TYPE_QUARTZ: The font is of type Quartz (Since: 1.6)
+ * @CAIRO_FONT_TYPE_USER: The font was create using cairo's user font api (Since: 1.8)
+ *
+ * #cairo_font_type_t is used to describe the type of a given font
+ * face or scaled font. The font types are also known as "font
+ * backends" within cairo.
+ *
+ * The type of a font face is determined by the function used to
+ * create it, which will generally be of the form
+ * cairo_<emphasis>type</emphasis>_font_face_create(). The font face type can be queried
+ * with cairo_font_face_get_type()
+ *
+ * The various #cairo_font_face_t functions can be used with a font face
+ * of any type.
+ *
+ * The type of a scaled font is determined by the type of the font
+ * face passed to cairo_scaled_font_create(). The scaled font type can
+ * be queried with cairo_scaled_font_get_type()
+ *
+ * The various #cairo_scaled_font_t functions can be used with scaled
+ * fonts of any type, but some font backends also provide
+ * type-specific functions that must only be called with a scaled font
+ * of the appropriate type. These functions have names that begin with
+ * cairo_<emphasis>type</emphasis>_scaled_font() such as cairo_ft_scaled_font_lock_face().
+ *
+ * The behavior of calling a type-specific function with a scaled font
+ * of the wrong type is undefined.
+ *
+ * New entries may be added in future versions.
+ *
+ * Since: 1.2
+
+</pre></div></br>
+
+<a name="cairo_path_data_type_t">cairo_path_data_type_t</a><div class="block"><pre>
+ * 
+ * @CAIRO_PATH_MOVE_TO: A move-to operation
+ * @CAIRO_PATH_LINE_TO: A line-to operation
+ * @CAIRO_PATH_CURVE_TO: A curve-to operation
+ * @CAIRO_PATH_CLOSE_PATH: A close-path operation
+ *
+ * #cairo_path_data_t is used to describe the type of one portion
+ * of a path when represented as a #cairo_path_t.
+ * See #cairo_path_data_t for details.
+
+</pre></div></br>
+
+<a name="cairo_path_data_t">cairo_path_data_t</a><div class="block"><pre>
+ *
+ * #cairo_path_data_t is used to represent the path data inside a
+ * #cairo_path_t.
+ *
+ * The data structure is designed to try to balance the demands of
+ * efficiency and ease-of-use. A path is represented as an array of
+ * #cairo_path_data_t, which is a union of headers and points.
+ *
+ * Each portion of the path is represented by one or more elements in
+ * the array, (one header followed by 0 or more points). The length
+ * value of the header is the number of array elements for the current
+ * portion including the header, (ie. length == 1 + # of points), and
+ * where the number of points for each element type is as follows:
+ *
+ * <programlisting>
+ *     %CAIRO_PATH_MOVE_TO:     1 point
+ *     %CAIRO_PATH_LINE_TO:     1 point
+ *     %CAIRO_PATH_CURVE_TO:    3 points
+ *     %CAIRO_PATH_CLOSE_PATH:  0 points
+ * </programlisting>
+ *
+ * The semantics and ordering of the coordinate values are consistent
+ * with cairo_move_to(), cairo_line_to(), cairo_curve_to(), and
+ * cairo_close_path().
+ *
+ * Here is sample code for iterating through a #cairo_path_t:
+ *
+ * <informalexample><programlisting>
+ *      int i;
+ *      cairo_path_t *path;
+ *      cairo_path_data_t *data;
+ * &nbsp;
+ *      path = cairo_copy_path (cr);
+ * &nbsp;
+ *      for (i=0; i < path->num_data; i += path->data[i].header.length) {
+ *          data = &amp;path->data[i];
+ *          switch (data->header.type) {
+ *          case CAIRO_PATH_MOVE_TO:
+ *              do_move_to_things (data[1].point.x, data[1].point.y);
+ *              break;
+ *          case CAIRO_PATH_LINE_TO:
+ *              do_line_to_things (data[1].point.x, data[1].point.y);
+ *              break;
+ *          case CAIRO_PATH_CURVE_TO:
+ *              do_curve_to_things (data[1].point.x, data[1].point.y,
+ *                                  data[2].point.x, data[2].point.y,
+ *                                  data[3].point.x, data[3].point.y);
+ *              break;
+ *          case CAIRO_PATH_CLOSE_PATH:
+ *              do_close_path_things ();
+ *              break;
+ *          }
+ *      }
+ *      cairo_path_destroy (path);
+ * </programlisting></informalexample>
+ *
+ * As of cairo 1.4, cairo does not mind if there are more elements in
+ * a portion of the path than needed.  Such elements can be used by
+ * users of the cairo API to hold extra values in the path data
+ * structure.  For this reason, it is recommended that applications
+ * always use <literal>data->header.length</literal> to
+ * iterate over the path data, instead of hardcoding the number of
+ * elements for each element type.
+
+</pre></div></br>
+
+<a name="cairo_path_t">cairo_path_t</a><div class="block"><pre>
+ * 
+ * @status: the current error status
+ * @data: the elements in the path
+ * @num_data: the number of elements in the data array
+ *
+ * A data structure for holding a path. This data structure serves as
+ * the return value for cairo_copy_path() and
+ * cairo_copy_path_flat() as well the input value for
+ * cairo_append_path().
+ *
+ * See #cairo_path_data_t for hints on how to iterate over the
+ * actual data within the path.
+ *
+ * The num_data member gives the number of elements in the data
+ * array. This number is larger than the number of independent path
+ * portions (defined in #cairo_path_data_type_t), since the data
+ * includes both headers and coordinates for each portion.
+
+</pre></div></br>
+
+<a name="cairo_device_type_t">cairo_device_type_t</a><div class="block"><pre>
+ * 
+ * cairo_device_type_t:
+ * @CAIRO_DEVICE_TYPE_DRM: The surface is of type Direct Render Manager
+ * @CAIRO_DEVICE_TYPE_GL: The surface is of type OpenGL
+ * @CAIRO_DEVICE_TYPE_SCRIPT: The surface is of type script
+ * @CAIRO_DEVICE_TYPE_XCB: The surface is of type xcb
+ * @CAIRO_DEVICE_TYPE_XLIB: The surface is of type xlib
+ * @CAIRO_DEVICE_TYPE_XML: The surface is of type XML
+ *   cairo_surface_create_for_rectangle()
+ *
+ * #cairo_device_type_t is used to describe the type of a given
+ * device. The devices types are also known as "backends" within cairo.
+ *
+ * The device type can be queried with cairo_device_get_type()
+ *
+ * The various #cairo_device_t functions can be used with surfaces of
+ * any type, but some backends also provide type-specific functions
+ * that must only be called with a device of the appropriate
+ * type. These functions have names that begin with
+ * cairo_<emphasis>type</emphasis>_device<!-- --> such as cairo_xcb_device_debug_set_render_version().
+ *
+ * The behavior of calling a type-specific function with a surface of
+ * the wrong type is undefined.
+ *
+ * New entries may be added in future versions.
+ *
+ * Since: 1.10
+
+</pre></div></br>
+
+<a name="cairo_surface_type_t">cairo_surface_type_t</a><div class="block"><pre>
+ * 
+ * @CAIRO_SURFACE_TYPE_IMAGE: The surface is of type image
+ * @CAIRO_SURFACE_TYPE_PDF: The surface is of type pdf
+ * @CAIRO_SURFACE_TYPE_PS: The surface is of type ps
+ * @CAIRO_SURFACE_TYPE_XLIB: The surface is of type xlib
+ * @CAIRO_SURFACE_TYPE_XCB: The surface is of type xcb
+ * @CAIRO_SURFACE_TYPE_GLITZ: The surface is of type glitz
+ * @CAIRO_SURFACE_TYPE_QUARTZ: The surface is of type quartz
+ * @CAIRO_SURFACE_TYPE_WIN32: The surface is of type win32
+ * @CAIRO_SURFACE_TYPE_BEOS: The surface is of type beos
+ * @CAIRO_SURFACE_TYPE_DIRECTFB: The surface is of type directfb
+ * @CAIRO_SURFACE_TYPE_SVG: The surface is of type svg
+ * @CAIRO_SURFACE_TYPE_OS2: The surface is of type os2
+ * @CAIRO_SURFACE_TYPE_WIN32_PRINTING: The surface is a win32 printing surface
+ * @CAIRO_SURFACE_TYPE_QUARTZ_IMAGE: The surface is of type quartz_image
+ * @CAIRO_SURFACE_TYPE_SCRIPT: The surface is of type script, since 1.10
+ * @CAIRO_SURFACE_TYPE_QT: The surface is of type Qt, since 1.10
+ * @CAIRO_SURFACE_TYPE_RECORDING: The surface is of type recording, since 1.10
+ * @CAIRO_SURFACE_TYPE_VG: The surface is a OpenVG surface, since 1.10
+ * @CAIRO_SURFACE_TYPE_GL: The surface is of type OpenGL, since 1.10
+ * @CAIRO_SURFACE_TYPE_DRM: The surface is of type Direct Render Manager, since 1.10
+ * @CAIRO_SURFACE_TYPE_TEE: The surface is of type 'tee' (a multiplexing surface), since 1.10
+ * @CAIRO_SURFACE_TYPE_XML: The surface is of type XML (for debugging), since 1.10
+ * @CAIRO_SURFACE_TYPE_SKIA: The surface is of type Skia, since 1.10
+ * @CAIRO_SURFACE_TYPE_SUBSURFACE: The surface is a subsurface created with
+ *   cairo_surface_create_for_rectangle(), since 1.10
+ *
+ * #cairo_surface_type_t is used to describe the type of a given
+ * surface. The surface types are also known as "backends" or "surface
+ * backends" within cairo.
+ *
+ * The type of a surface is determined by the function used to create
+ * it, which will generally be of the form cairo_<emphasis>type</emphasis>_surface_create(),
+ * (though see cairo_surface_create_similar() as well).
+ *
+ * The surface type can be queried with cairo_surface_get_type()
+ *
+ * The various #cairo_surface_t functions can be used with surfaces of
+ * any type, but some backends also provide type-specific functions
+ * that must only be called with a surface of the appropriate
+ * type. These functions have names that begin with
+ * cairo_<emphasis>type</emphasis>_surface<!-- --> such as cairo_image_surface_get_width().
+ *
+ * The behavior of calling a type-specific function with a surface of
+ * the wrong type is undefined.
+ *
+ * New entries may be added in future versions.
+ *
+ * Since: 1.2
+
+</pre></div></br>
+
+<a name="cairo_format_t">cairo_format_t</a><div class="block"><pre>
+ * 
+ * @CAIRO_FORMAT_INVALID: no such format exists or is supported.
+ * @CAIRO_FORMAT_ARGB32: each pixel is a 32-bit quantity, with
+ *   alpha in the upper 8 bits, then red, then green, then blue.
+ *   The 32-bit quantities are stored native-endian. Pre-multiplied
+ *   alpha is used. (That is, 50% transparent red is 0x80800000,
+ *   not 0x80ff0000.)
+ * @CAIRO_FORMAT_RGB24: each pixel is a 32-bit quantity, with
+ *   the upper 8 bits unused. Red, Green, and Blue are stored
+ *   in the remaining 24 bits in that order.
+ * @CAIRO_FORMAT_A8: each pixel is a 8-bit quantity holding
+ *   an alpha value.
+ * @CAIRO_FORMAT_A1: each pixel is a 1-bit quantity holding
+ *   an alpha value. Pixels are packed together into 32-bit
+ *   quantities. The ordering of the bits matches the
+ *   endianess of the platform. On a big-endian machine, the
+ *   first pixel is in the uppermost bit, on a little-endian
+ *   machine the first pixel is in the least-significant bit.
+ * @CAIRO_FORMAT_RGB16_565: This format value is deprecated. It has
+ *   never been properly implemented in cairo and should not be used
+ *   by applications. (since 1.2)
+ *
+ * #cairo_format_t is used to identify the memory format of
+ * image data.
+ *
+ * New entries may be added in future versions.
+
+</pre></div></br>
+
+<a name="cairo_pattern_type_t">cairo_pattern_type_t</a><div class="block"><pre>
+ * 
+ * @CAIRO_PATTERN_TYPE_SOLID: The pattern is a solid (uniform)
+ * color. It may be opaque or translucent.
+ * @CAIRO_PATTERN_TYPE_SURFACE: The pattern is a based on a surface (an image).
+ * @CAIRO_PATTERN_TYPE_LINEAR: The pattern is a linear gradient.
+ * @CAIRO_PATTERN_TYPE_RADIAL: The pattern is a radial gradient.
+ *
+ * #cairo_pattern_type_t is used to describe the type of a given pattern.
+ *
+ * The type of a pattern is determined by the function used to create
+ * it. The cairo_pattern_create_rgb() and cairo_pattern_create_rgba()
+ * functions create SOLID patterns. The remaining
+ * cairo_pattern_create<!-- --> functions map to pattern types in obvious
+ * ways.
+ *
+ * The pattern type can be queried with cairo_pattern_get_type()
+ *
+ * Most #cairo_pattern_t functions can be called with a pattern of any
+ * type, (though trying to change the extend or filter for a solid
+ * pattern will have no effect). A notable exception is
+ * cairo_pattern_add_color_stop_rgb() and
+ * cairo_pattern_add_color_stop_rgba() which must only be called with
+ * gradient patterns (either LINEAR or RADIAL). Otherwise the pattern
+ * will be shutdown and put into an error state.
+ *
+ * New entries may be added in future versions.
+ *
+ * Since: 1.2
+
+</pre></div></br>
+
+<a name="cairo_extend_t">cairo_extend_t</a><div class="block"><pre>
+ * 
+ * @CAIRO_EXTEND_NONE: pixels outside of the source pattern
+ *   are fully transparent
+ * @CAIRO_EXTEND_REPEAT: the pattern is tiled by repeating
+ * @CAIRO_EXTEND_REFLECT: the pattern is tiled by reflecting
+ *   at the edges (Implemented for surface patterns since 1.6)
+ * @CAIRO_EXTEND_PAD: pixels outside of the pattern copy
+ *   the closest pixel from the source (Since 1.2; but only
+ *   implemented for surface patterns since 1.6)
+ *
+ * #cairo_extend_t is used to describe how pattern color/alpha will be
+ * determined for areas "outside" the pattern's natural area, (for
+ * example, outside the surface bounds or outside the gradient
+ * geometry).
+ *
+ * The default extend mode is %CAIRO_EXTEND_NONE for surface patterns
+ * and %CAIRO_EXTEND_PAD for gradient patterns.
+ *
+ * New entries may be added in future versions.
+
+</pre></div></br>
+
+<a name="cairo_filter_t">cairo_filter_t</a><div class="block"><pre>
+ * 
+ * @CAIRO_FILTER_FAST: A high-performance filter, with quality similar
+ *     to %CAIRO_FILTER_NEAREST
+ * @CAIRO_FILTER_GOOD: A reasonable-performance filter, with quality
+ *     similar to %CAIRO_FILTER_BILINEAR
+ * @CAIRO_FILTER_BEST: The highest-quality available, performance may
+ *     not be suitable for interactive use.
+ * @CAIRO_FILTER_NEAREST: Nearest-neighbor filtering
+ * @CAIRO_FILTER_BILINEAR: Linear interpolation in two dimensions
+ * @CAIRO_FILTER_GAUSSIAN: This filter value is currently
+ *     unimplemented, and should not be used in current code.
+ *
+ * #cairo_filter_t is used to indicate what filtering should be
+ * applied when reading pixel values from patterns. See
+ * cairo_pattern_set_source() for indicating the desired filter to be
+ * used with a particular pattern.
+
+</pre></div></br>
+
+<a name="cairo_pdf_version_t">cairo_pdf_version_t</a><div class="block"><pre>
+ * 
+ * @CAIRO_PDF_VERSION_1_4: The version 1.4 of the PDF specification.
+ * @CAIRO_PDF_VERSION_1_5: The version 1.5 of the PDF specification.
+ *
+ * #cairo_pdf_version_t is used to describe the version number of the PDF
+ * specification that a generated PDF file will conform to.
+ *
+ * Since 1.10
+
+</pre></div></br>
+
+<a name="cairo_ps_level_t">cairo_ps_level_t</a><div class="block"><pre>
+ * 
+ * @CAIRO_PS_LEVEL_2: The language level 2 of the PostScript specification.
+ * @CAIRO_PS_LEVEL_3: The language level 3 of the PostScript specification.
+ *
+ * #cairo_ps_level_t is used to describe the language level of the
+ * PostScript Language Reference that a generated PostScript file will
+ * conform to.
+
+</pre></div></br>
+
+<a name="cairo_script_mode_t">cairo_script_mode_t</a><div class="block"><pre>
+ * 
+ * CAIRO_SCRIPT_MODE_BINARY
+ * CAIRO_SCRIPT_MODE_ASCII
+
+</pre></div></br>
+
+<a name="cairo_svg_version_t">cairo_svg_version_t</a><div class="block"><pre>
+ * 
+ * @CAIRO_SVG_VERSION_1_1: The version 1.1 of the SVG specification.
+ * @CAIRO_SVG_VERSION_1_2: The version 1.2 of the SVG specification.
+ *
+ * #cairo_svg_version_t is used to describe the version number of the SVG
+ * specification that a generated SVG file will conform to.
+ 
+</pre></div></br>
+
+<a name="cairo_text_cluster_t">cairo_text_cluster_t</a><div class="block"><pre>
+ *
+ * @num_bytes: the number of bytes of UTF-8 text covered by cluster
+ * @num_glyphs: the number of glyphs covered by cluster
+ *
+ * The #cairo_text_cluster_t structure holds information about a single
+ * <firstterm>text cluster</firstterm>.  A text cluster is a minimal
+ * mapping of some glyphs corresponding to some UTF-8 text.
+ *
+ * For a cluster to be valid, both @num_bytes and @num_glyphs should
+ * be non-negative, and at least one should be non-zero.
+ * Note that clusters with zero glyphs are not as well supported as
+ * normal clusters.  For example, PDF rendering applications typically
+ * ignore those clusters when PDF text is being selected.
+ *
+ * See cairo_show_text_glyphs() for how clusters are used in advanced
+ * text operations.
+ *
+ * Since: 1.8
+ 
+</pre></div></br>
+
+<a name="cairo_text_cluster_flags_t">cairo_text_cluster_flags_t</a><div class="block"><pre>
+ *
+ * @CAIRO_TEXT_CLUSTER_FLAG_BACKWARD: The clusters in the cluster array
+ * map to glyphs in the glyph array from end to start.
+ *
+ * Specifies properties of a text cluster mapping.
+ *
+ * Since: 1.8
+ 
+</pre></div></br>
+
+<a name="cairo_region_t">cairo_region_t</a><div class="block"><pre>
+ * 
+ * A #cairo_region_t represents a set of integer-aligned rectangles.
+ *
+ * It allows set-theoretical operations like cairo_region_union() and
+ * cairo_region_intersect() to be performed on them.
+ *
+ * Memory management of #cairo_region_t is done with
+ * cairo_region_reference() and cairo_region_destroy().
+ *
+ * Since: 1.10
+ 
+</pre></div></br>
+
+<a name="cairo_rectangle_int_t">cairo_rectangle_int_t</a><div class="block"><pre>
+ * 
+ * @x: X coordinate of the left side of the rectangle
+ * @y: Y coordinate of the the top side of the rectangle
+ * @width: width of the rectangle
+ * @height: height of the rectangle
+ *
+ * A data structure for holding a rectangle with integer coordinates.
+ *
+ * Since: 1.10
+ 
+</pre></div></br>
+
+<a name="cairo_region_overlap_t">cairo_region_overlap_t</a><div class="block"><pre>
+ * 
+    CAIRO_REGION_OVERLAP_IN,		/* completely inside region */
+    CAIRO_REGION_OVERLAP_OUT,		/* completely outside region */
+    CAIRO_REGION_OVERLAP_PART		/* partly inside region */
+ 
+</pre></div></br>
+
+<a name="cairo_user_scaled_font_init_func_t">cairo_user_scaled_font_init_func_t</a><div class="block"><pre>
+ *
+ * @scaled_font: the scaled-font being created
+ * @cr: a cairo context, in font space
+ * @extents: font extents to fill in, in font space
+ *
+ * #cairo_user_scaled_font_init_func_t is the type of function which is
+ * called when a scaled-font needs to be created for a user font-face.
+ *
+ * The cairo context @cr is not used by the caller, but is prepared in font
+ * space, similar to what the cairo contexts passed to the render_glyph
+ * method will look like.  The callback can use this context for extents
+ * computation for example.  After the callback is called, @cr is checked
+ * for any error status.
+ *
+ * The @extents argument is where the user font sets the font extents for
+ * @scaled_font.  It is in font space, which means that for most cases its
+ * ascent and descent members should add to 1.0.  @extents is preset to
+ * hold a value of 1.0 for ascent, height, and max_x_advance, and 0.0 for
+ * descent and max_y_advance members.
+ *
+ * The callback is optional.  If not set, default font extents as described
+ * in the previous paragraph will be used.
+ *
+ * Note that @scaled_font is not fully initialized at this
+ * point and trying to use it for text operations in the callback will result
+ * in deadlock.
+ *
+ * Returns: %CAIRO_STATUS_SUCCESS upon success, or an error status on error.
+ *
+ * Since: 1.8
+
+typedef cairo_status_t (*cairo_user_scaled_font_init_func_t) (cairo_scaled_font_t  *scaled_font,
+							      cairo_t              *cr,
+							      cairo_font_extents_t *extents);
+
+</pre></div></br>
+
+<a name="cairo_user_scaled_font_render_glyph_func_t">cairo_user_scaled_font_render_glyph_func_t</a><div class="block"><pre>
+ * 
+ * @scaled_font: user scaled-font
+ * @glyph: glyph code to render
+ * @cr: cairo context to draw to, in font space
+ * @extents: glyph extents to fill in, in font space
+ *
+ * #cairo_user_scaled_font_render_glyph_func_t is the type of function which
+ * is called when a user scaled-font needs to render a glyph.
+ *
+ * The callback is mandatory, and expected to draw the glyph with code @glyph to
+ * the cairo context @cr.  @cr is prepared such that the glyph drawing is done in
+ * font space.  That is, the matrix set on @cr is the scale matrix of @scaled_font,
+ * The @extents argument is where the user font sets the font extents for
+ * @scaled_font.  However, if user prefers to draw in user space, they can
+ * achieve that by changing the matrix on @cr.  All cairo rendering operations
+ * to @cr are permitted, however, the result is undefined if any source other
+ * than the default source on @cr is used.  That means, glyph bitmaps should
+ * be rendered using cairo_mask() instead of cairo_paint().
+ *
+ * Other non-default settings on @cr include a font size of 1.0 (given that
+ * it is set up to be in font space), and font options corresponding to
+ * @scaled_font.
+ *
+ * The @extents argument is preset to have <literal>x_bearing</literal>,
+ * <literal>width</literal>, and <literal>y_advance</literal> of zero,
+ * <literal>y_bearing</literal> set to <literal>-font_extents.ascent</literal>,
+ * <literal>height</literal> to <literal>font_extents.ascent+font_extents.descent</literal>,
+ * and <literal>x_advance</literal> to <literal>font_extents.max_x_advance</literal>.
+ * The only field user needs to set in majority of cases is
+ * <literal>x_advance</literal>.
+ * If the <literal>width</literal> field is zero upon the callback returning
+ * (which is its preset value), the glyph extents are automatically computed
+ * based on the drawings done to @cr.  This is in most cases exactly what the
+ * desired behavior is.  However, if for any reason the callback sets the
+ * extents, it must be ink extents, and include the extents of all drawing
+ * done to @cr in the callback.
+ *
+ * Returns: %CAIRO_STATUS_SUCCESS upon success, or
+ * %CAIRO_STATUS_USER_FONT_ERROR or any other error status on error.
+ *
+ * Since: 1.8
+
+typedef cairo_status_t (*cairo_user_scaled_font_render_glyph_func_t) (cairo_scaled_font_t  *scaled_font,
+								      unsigned long         glyph,
+								      cairo_t              *cr,
+								      cairo_text_extents_t *extents);
+
+</pre></div></br>
+
+<a name="cairo_user_scaled_font_text_to_glyphs_func_t">cairo_user_scaled_font_text_to_glyphs_func_t</a><div class="block"><pre>
+ * 
+ * @scaled_font: the scaled-font being created
+ * @utf8: a string of text encoded in UTF-8
+ * @utf8_len: length of @utf8 in bytes
+ * @glyphs: pointer to array of glyphs to fill, in font space
+ * @num_glyphs: pointer to number of glyphs
+ * @clusters: pointer to array of cluster mapping information to fill, or %NULL
+ * @num_clusters: pointer to number of clusters
+ * @cluster_flags: pointer to location to store cluster flags corresponding to the
+ *                 output @clusters
+ *
+ * #cairo_user_scaled_font_text_to_glyphs_func_t is the type of function which
+ * is called to convert input text to an array of glyphs.  This is used by the
+ * cairo_show_text() operation.
+ *
+ * Using this callback the user-font has full control on glyphs and their
+ * positions.  That means, it allows for features like ligatures and kerning,
+ * as well as complex <firstterm>shaping</firstterm> required for scripts like
+ * Arabic and Indic.
+ *
+ * The @num_glyphs argument is preset to the number of glyph entries available
+ * in the @glyphs buffer. If the @glyphs buffer is %NULL, the value of
+ * @num_glyphs will be zero.  If the provided glyph array is too short for
+ * the conversion (or for convenience), a new glyph array may be allocated
+ * using cairo_glyph_allocate() and placed in @glyphs.  Upon return,
+ * @num_glyphs should contain the number of generated glyphs.  If the value
+ * @glyphs points at has changed after the call, the caller will free the
+ * allocated glyph array using cairo_glyph_free().
+ * The callback should populate the glyph indices and positions (in font space)
+ * assuming that the text is to be shown at the origin.
+ *
+ * If @clusters is not %NULL, @num_clusters and @cluster_flags are also
+ * non-%NULL, and cluster mapping should be computed. The semantics of how
+ * cluster array allocation works is similar to the glyph array.  That is,
+ * if @clusters initially points to a non-%NULL value, that array may be used
+ * as a cluster buffer, and @num_clusters points to the number of cluster
+ * entries available there.  If the provided cluster array is too short for
+ * the conversion (or for convenience), a new cluster array may be allocated
+ * using cairo_text_cluster_allocate() and placed in @clusters.  Upon return,
+ * @num_clusters should contain the number of generated clusters.
+ * If the value @clusters points at has changed after the call, the caller
+ * will free the allocated cluster array using cairo_text_cluster_free().
+ *
+ * The callback is optional.  If @num_glyphs is negative upon
+ * the callback returning or if the return value
+ * is %CAIRO_STATUS_USER_FONT_NOT_IMPLEMENTED, the unicode_to_glyph callback
+ * is tried.  See #cairo_user_scaled_font_unicode_to_glyph_func_t.
+ *
+ * Note: While cairo does not impose any limitation on glyph indices,
+ * some applications may assume that a glyph index fits in a 16-bit
+ * unsigned integer.  As such, it is advised that user-fonts keep their
+ * glyphs in the 0 to 65535 range.  Furthermore, some applications may
+ * assume that glyph 0 is a special glyph-not-found glyph.  User-fonts
+ * are advised to use glyph 0 for such purposes and do not use that
+ * glyph value for other purposes.
+ *
+ * Returns: %CAIRO_STATUS_SUCCESS upon success,
+ * %CAIRO_STATUS_USER_FONT_NOT_IMPLEMENTED if fallback options should be tried,
+ * or %CAIRO_STATUS_USER_FONT_ERROR or any other error status on error.
+ *
+ * Since: 1.8
+
+typedef cairo_status_t (*cairo_user_scaled_font_text_to_glyphs_func_t) (cairo_scaled_font_t        *scaled_font,
+									const char	           *utf8,
+									int		            utf8_len,
+									cairo_glyph_t	          **glyphs,
+									int		           *num_glyphs,
+									cairo_text_cluster_t      **clusters,
+									int		           *num_clusters,
+									cairo_text_cluster_flags_t *cluster_flags);
+
+</pre></div></br>
+
+<a name="cairo_user_scaled_font_unicode_to_glyph_func_t">cairo_user_scaled_font_unicode_to_glyph_func_t</a><div class="block"><pre>
+ * 
+ * @scaled_font: the scaled-font being created
+ * @unicode: input unicode character code-point
+ * @glyph_index: output glyph index
+ *
+ * #cairo_user_scaled_font_unicode_to_glyph_func_t is the type of function which
+ * is called to convert an input Unicode character to a single glyph.
+ * This is used by the cairo_show_text() operation.
+ *
+ * This callback is used to provide the same functionality as the
+ * text_to_glyphs callback does (see #cairo_user_scaled_font_text_to_glyphs_func_t)
+ * but has much less control on the output,
+ * in exchange for increased ease of use.  The inherent assumption to using
+ * this callback is that each character maps to one glyph, and that the
+ * mapping is context independent.  It also assumes that glyphs are positioned
+ * according to their advance width.  These mean no ligatures, kerning, or
+ * complex scripts can be implemented using this callback.
+ *
+ * The callback is optional, and only used if text_to_glyphs callback is not
+ * set or fails to return glyphs.  If this callback is not set or if it returns
+ * %CAIRO_STATUS_USER_FONT_NOT_IMPLEMENTED, an identity mapping from Unicode
+ * code-points to glyph indices is assumed.
+ *
+ * Note: While cairo does not impose any limitation on glyph indices,
+ * some applications may assume that a glyph index fits in a 16-bit
+ * unsigned integer.  As such, it is advised that user-fonts keep their
+ * glyphs in the 0 to 65535 range.  Furthermore, some applications may
+ * assume that glyph 0 is a special glyph-not-found glyph.  User-fonts
+ * are advised to use glyph 0 for such purposes and do not use that
+ * glyph value for other purposes.
+ *
+ * Returns: %CAIRO_STATUS_SUCCESS upon success,
+ * %CAIRO_STATUS_USER_FONT_NOT_IMPLEMENTED if fallback options should be tried,
+ * or %CAIRO_STATUS_USER_FONT_ERROR or any other error status on error.
+ *
+ * Since: 1.8
+
+typedef cairo_status_t (*cairo_user_scaled_font_unicode_to_glyph_func_t) (cairo_scaled_font_t *scaled_font,
+									  unsigned long        unicode,
+									  unsigned long       *glyph_index);
+
+</pre></div></br>
+
+
+<h2><a name="oointerface">Object Oriented Interface</a></h2>
+- Class naming taken from Cairomm<br/>
+
+- Methods use related C-API binding implementation (so their implementation status is same)<br/>
+
+- Only one of C-API's create functions is used as class constructor for related cairo type<br/>
+    <div class="block"><pre>
+    [C]   cairo_surface_t * cairo_image_surface_create (cairo_format_t format, int width, int height);
+    [Lua] surface_o = cairo.ImageSurface(format, width, height)
+    </pre></div>
+    
+- Class methods chosen via C-API function's first parameter:<br/>
+    <div class="block"><pre>
+    [C]   void cairo_set_font_face (cairo_t *cr, cairo_font_face_t *font_face);
+    [Lua] cr_o:set_font_face(font_face)  -- Context class
+    
+    [C]   void cairo_matrix_init_identity (cairo_matrix_t *matrix);
+    [Lua] matrix_o:init_identity()
+    </pre></div>
+    
+- Function and method return values are same:<br/>
+    <div class="block"><pre>
+    [C]   cairo_surface_t * cairo_get_group_target (cairo_t *cr);
+    [Lua] target_lud = cairo.get_group_target(cr)
+          target_lud = cr:get_group_target()
+          
+          -- return value may wrapped as a Surface object
+          target_o = cairo.SurfaceFromLUD(cr:get_group_target(), true) -- give ownership
+          target_o = cairo.SurfaceFromLUD(cr:get_group_target())       -- by default ownership is not transferred
+    </pre></div>
+    
+- Functions and methods accepts object or lightuserdata as parameter (except destroy functions, they only accepts lightuserdata):<br/>
+    <div class="block"><pre>
+    [C]   cairo_format_t cairo_image_surface_get_format (cairo_surface_t *surface);
+    [Lua] int = cairo.image_surface_get_format(surface_lud)
+          int = cairo.image_surface_get_format(surface_o)
+          
+    [C]   void cairo_set_source_surface (cairo_t *cr, cairo_surface_t *surface, double x, double y);
+    [Lua] cairo.set_source_surface(cr_lud, surface_lud, x, y)
+          cairo.set_source_surface(cr_o, surface_o, x, y)
+          cr:set_source_surface(surface_lud, x, y)
+          cr:set_source_surface(surface_o, x, y)
+    </pre></div>
+    
+<br/>
+- Classes:
+<ul>
+<li>Context - <a href="#cairo_t">cairo_t</a></li>
+<li>Device - <a href="#cairo_device_t">cairo_device_t</a></li>
+<li>FontOptions - <a href="#cairo_font_options_t">cairo_font_options_t</a></li>
+<li>FontExtents - <a href="#cairo_font_extents_t">cairo_font_extents_t</a></li>
+<li>FontFace - <a href="#cairo_font_face_t">cairo_font_face_t</a></li>
+    <ul>
+    <li>ToyFontFace</li>
+    <li>FtFontFace</li>
+    <li>Win32FontFace</li>
+    <li>QuartzFontFace</li>
+    <li>UserFontFace</li>
+    </ul>
+<li>Matrix - <a href="#cairo_matrix_t">cairo_matrix_t</a></li>
+<li>Path - <a href="#cairo_path_t">cairo_path_t</a></li>
+<li>Patterns - <a href="#cairo_pattern_t">cairo_pattern_t</a></li>
+    <ul>
+    <li>SolidPattern</li>
+    <li>SurfacePattern</li>
+    <li>LinearGradient</li>
+    <li>RadialGradient</li>
+    </ul>
+<li>RectangleInt - <a href="#cairo_rectangle_int_t">cairo_rectangle_int_t</a></li>
+<li>Region - <a href="#cairo_region_t">cairo_region_t</a></li>
+<li>ScaledFont - <a href="#cairo_scaled_font_t">cairo_scaled_font_t</a></li>
+<li>Surfaces - <a href="#cairo_surface_t">cairo_surface_t</a></li>
+    <ul>
+    <li>ImageSurface</li>
+    <li>PdfSurface</li>
+    <li>PsSurface</li>
+    <li>XlibSurface</li>
+    <li>XcbSurface</li>
+    <li>GlitzSurface</li>
+    <li>QuartzSurface</li>
+    <li>Win32Surface</li>
+    <li>BeosSurface</li>
+    <li>DirectFbSurface</li>
+    <li>SvgSurface</li>
+    <li>Os2Surface</li>
+    <li>Win32PrintingSurface</li>
+    <li>QuartzImageSurface</li>
+    <li>ScriptSurface</li>
+    <li>QtSurface</li>
+    <li>RecordingSurface</li>
+    <li>VgSurface</li>
+    <li>GlSurface</li>
+    <li>DrmSurface</li>
+    <li>TeeSurface</li>
+    <li>XmlSurface</li>
+    <li>SkiaSurface</li>
+    <li>SubSurface</li>
+    </ul>
+<li>TextExtents - <a href="#cairo_text_extents_t">cairo_text_extents_t</a></li>
+</ul>
+
+<br/>
+- Wrappers:<br/>
+    <small>
+    Object creators from a lightuserdata to corresponding class<br/>
+    Syntax: o = cairo.ContextFromLUD(crlud, transfer_ownership) -- transfer_ownership: true/false(default)<br/>
+    </small>
+    <ul>
+    <li>ContextFromLUD</li>
+    <li>DeviceFromLUD</li>
+    <li>FontFaceFromLUD</li>
+    <li>FontOptionsFromLUD</li>
+    <li>PathFromLUD</li>
+    <li>PatternFromLUD</li>
+    <li>RegionFromLUD</li>
+    <li>ScaledFontFromLUD</li>
+    <li>SurfaceFromLUD</li>
+    </ul>
+<br/>
+
+<hr>
+<small>
+Based on cairo.h (1.10.2)  -  Prepared by Hakki Dogusan  - <a href="http://www.dynaset.org/dogusanh">http://www.dynaset.org/dogusanh</a> - Last update: 2011-01-11
+</small>
+
+</body>
+</html>
