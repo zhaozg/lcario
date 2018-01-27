@@ -29,12 +29,15 @@ typedef struct _FontOptions
 
 static int new_FontOptions (lua_State *L)
 {
+    cairo_font_options_t *fo;
+    FontOptions *o;
+
     lua_remove(L, 1); // remove cairo.FontOptions
 
   //{"create",                                   l_cairo_font_options_create},
-    cairo_font_options_t *fo = cairo_font_options_create();
+    fo = cairo_font_options_create();
 
-    FontOptions *o = (FontOptions *) lua_newuserdata(L, sizeof(FontOptions));
+    o = (FontOptions *) lua_newuserdata(L, sizeof(FontOptions));
     o->fo_     = fo;
     o->havefo_ = 1;
 

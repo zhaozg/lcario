@@ -22,6 +22,9 @@
 
 static int new_Win32FontFace (lua_State *L)
 {
+    LOGFONTW *logfont;
+    cairo_font_face_t *ff;
+
     lua_remove(L, 1); // remove cairo.Win32FontFace
 
     //FIXME
@@ -31,8 +34,8 @@ static int new_Win32FontFace (lua_State *L)
     //{"win32_font_face_create_for_logfontw_hfont",l_cairo_win32_font_face_create_for_logfontw_hfont},
 #endif
 
-    LOGFONTW *logfont = (LOGFONTW *) check_lightuserdata(L, 1);
-    cairo_font_face_t *ff = cairo_win32_font_face_create_for_logfontw (logfont);
+    logfont = (LOGFONTW *) check_lightuserdata(L, 1);
+    ff = cairo_win32_font_face_create_for_logfontw (logfont);
 
     return new_FontFace(L, LUACAIRO ".Win32FontFace.mt", ff, CAIRO_FONT_TYPE_WIN32, 1);
 }

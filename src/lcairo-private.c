@@ -157,8 +157,9 @@ static void* get_userdata (lua_State *L, int ud, const char *tname) {
 
 static double get_numfield(lua_State* L, const char* key)
 {
+    double value;
     lua_getfield(L, -1, key);
-    double value = luaL_optnumber(L, -1, 0.0);
+    value = luaL_optnumber(L, -1, 0.0);
     lua_pop(L, 1); /* remove value */
     return value;
 }
@@ -331,11 +332,11 @@ static int luaopen_lcairo_private(lua_State* L)
     // cairo.set_operator (cr, CAIRO.OPERATOR_ADD)
     //
 
-    set_strfield(L, "VERSION_STRING",                CAIRO_VERSION_STRING);
+    set_strfield(L, "VERSION_STRING",                cairo_version_string());
     set_intfield(L, "VERSION_MAJOR",                 CAIRO_VERSION_MAJOR);
     set_intfield(L, "VERSION_MINOR",                 CAIRO_VERSION_MINOR);
     set_intfield(L, "VERSION_MICRO",                 CAIRO_VERSION_MICRO);
-    set_intfield(L, "VERSION",                       CAIRO_VERSION);
+    set_intfield(L, "VERSION",                       cairo_version());
 
     set_intfield(L, "HAS_XCB_DRM_FUNCTIONS",         CAIRO_HAS_XCB_DRM_FUNCTIONS);
     set_intfield(L, "HAS_XCB_SHM_FUNCTIONS",         CAIRO_HAS_XCB_SHM_FUNCTIONS);

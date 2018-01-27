@@ -22,10 +22,11 @@
 
 static cairo_rectangle_int_t check_RectangleInt(lua_State* L, int idx)
 {
+    cairo_rectangle_int_t rect;
+	
     luaL_checktype(L, idx, LUA_TTABLE);
     lua_pushvalue(L, idx); // copy table to top
 
-    cairo_rectangle_int_t rect;
     rect.x      = get_numfield(L, "x");
     rect.y      = get_numfield(L, "y");
     rect.width  = get_numfield(L, "width");
@@ -37,11 +38,12 @@ static cairo_rectangle_int_t check_RectangleInt(lua_State* L, int idx)
 
 static int new_RectangleInt (lua_State *L)
 {
+    cairo_rectangle_int_t *rect;
     cairo_rectangle_int_t rectin = {0, 0, 0, 0};
     int top = lua_gettop(L);
     if (top > 1) rectin = check_RectangleInt(L, 2);
 
-    cairo_rectangle_int_t *rect = (cairo_rectangle_int_t *) lua_newuserdata(L, sizeof(cairo_rectangle_int_t));
+    rect = (cairo_rectangle_int_t *) lua_newuserdata(L, sizeof(cairo_rectangle_int_t));
     *rect = rectin;
 
     luaL_getmetatable(L, LUACAIRO ".RectangleInt.mt");
@@ -68,7 +70,7 @@ static const struct luaL_Reg RectangleInt_methods[] = {
     {NULL, NULL}
 };
 
-static const Xet_reg_pre RectangleInt_getters[] = {
+static Xet_reg_pre RectangleInt_getters[] = {
     {"x",      Xet_get_number, offsetof(cairo_rectangle_int_t, x) },
     {"y",      Xet_get_number, offsetof(cairo_rectangle_int_t, y) },
     {"width",  Xet_get_number, offsetof(cairo_rectangle_int_t, width) },
@@ -76,7 +78,7 @@ static const Xet_reg_pre RectangleInt_getters[] = {
     {0, 0, 0}
 };
 
-static const Xet_reg_pre RectangleInt_setters[] = {
+static Xet_reg_pre RectangleInt_setters[] = {
     {"x",      Xet_set_number, offsetof(cairo_rectangle_int_t, x) },
     {"y",      Xet_set_number, offsetof(cairo_rectangle_int_t, y) },
     {"width",  Xet_set_number, offsetof(cairo_rectangle_int_t, width) },

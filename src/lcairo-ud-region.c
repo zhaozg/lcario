@@ -30,7 +30,12 @@ typedef struct _Region
 
 static int new_Region (lua_State *L)
 {
-    lua_remove(L, 1); // remove cairo.Region
+    cairo_rectangle_int_t *rectangle = NULL;
+    cairo_region_t *reg = NULL;
+    int top;
+    Region *o;
+
+	lua_remove(L, 1); // remove cairo.Region
 
 // cairo_public cairo_region_t *
 // cairo_region_create (void);
@@ -38,17 +43,16 @@ static int new_Region (lua_State *L)
 // cairo_public cairo_region_t *
 // cairo_region_create_rectangle (const cairo_rectangle_int_t *rectangle);
 
-    cairo_rectangle_int_t *rectangle = NULL;
-    int top = lua_gettop(L);
+    top = lua_gettop(L);
     if (top > 0) rectangle = get_userdata (L, 1, LUACAIRO ".RectangleInt.mt");
 
-    cairo_region_t *reg = NULL;
+
     if (rectangle)
         reg = cairo_region_create_rectangle (rectangle);
     else
         reg = cairo_region_create ();
 
-    Region *o = (Region *) lua_newuserdata(L, sizeof(Region));
+    o = (Region *) lua_newuserdata(L, sizeof(Region));
     o->reg_     = reg;
     o->havereg_ = 1;
 

@@ -20,10 +20,11 @@
 
 static cairo_text_extents_t check_TextExtents(lua_State* L, int idx)
 {
+    cairo_text_extents_t extents;
+	
     luaL_checktype(L, idx, LUA_TTABLE);
     lua_pushvalue(L, idx); // copy table to top
 
-    cairo_text_extents_t extents;
     extents.x_bearing = get_numfield(L, "x_bearing");
     extents.y_bearing = get_numfield(L, "y_bearing");
     extents.width     = get_numfield(L, "width");
@@ -37,11 +38,12 @@ static cairo_text_extents_t check_TextExtents(lua_State* L, int idx)
 
 static int new_TextExtents (lua_State *L)
 {
+    cairo_text_extents_t *te;
     cairo_text_extents_t tein = {0, 0, 0, 0, 0, 0};
     int top = lua_gettop(L);
     if (top > 1) tein = check_TextExtents(L, 2);
 
-    cairo_text_extents_t *te = (cairo_text_extents_t *) lua_newuserdata(L, sizeof(cairo_text_extents_t));
+    te = (cairo_text_extents_t *) lua_newuserdata(L, sizeof(cairo_text_extents_t));
     *te = tein;
 
     luaL_getmetatable(L, LUACAIRO ".TextExtents.mt");
@@ -68,7 +70,7 @@ static const struct luaL_Reg TextExtents_methods[] = {
     {NULL, NULL}
 };
 
-static const Xet_reg_pre TextExtents_getters[] = {
+static Xet_reg_pre TextExtents_getters[] = {
     {"x_bearing",    Xet_get_number, offsetof(cairo_text_extents_t, x_bearing) },
     {"y_bearing",    Xet_get_number, offsetof(cairo_text_extents_t, y_bearing) },
     {"width",        Xet_get_number, offsetof(cairo_text_extents_t, width)     },
@@ -78,7 +80,7 @@ static const Xet_reg_pre TextExtents_getters[] = {
     {0, 0, 0}
 };
 
-static const Xet_reg_pre TextExtents_setters[] = {
+static Xet_reg_pre TextExtents_setters[] = {
     {"x_bearing",    Xet_set_number, offsetof(cairo_text_extents_t, x_bearing) },
     {"y_bearing",    Xet_set_number, offsetof(cairo_text_extents_t, y_bearing) },
     {"width",        Xet_set_number, offsetof(cairo_text_extents_t, width)     },

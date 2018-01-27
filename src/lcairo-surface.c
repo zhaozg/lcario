@@ -110,7 +110,14 @@ static int l_cairo_surface_get_content(lua_State* L)
     return 1;
 }
 
-
+cairo_status_t lcairo_write_func(void *closure,
+                                 const unsigned char *data,
+                                 unsigned int length)
+{
+    luaL_Buffer *B = (luaL_Buffer *)closure;
+    luaL_addlstring(B, data,length);
+    return CAIRO_STATUS_SUCCESS;
+}
 #if CAIRO_HAS_PNG_FUNCTIONS
 
 // cairo_public cairo_status_t
@@ -119,9 +126,29 @@ static int l_cairo_surface_get_content(lua_State* L)
 static int l_cairo_surface_write_to_png(lua_State* L)
 {
     cairo_surface_t *surface = get_cairo_surface_t (L, 1);
-    const char *filename = luaL_checkstring(L, 2);
-    cairo_status_t v = cairo_surface_write_to_png (surface, filename);
-    lua_pushinteger(L, v);
+    if(lua_isnoneornil(L,2))
+    {
+        luaL_Buffer buf;
+        cairo_status_t v;
+
+        luaL_buffinit(L, &buf);
+        v = cairo_surface_write_to_png_stream(surface,lcairo_write_func, &buf);
+        if(v==CAIRO_STATUS_SUCCESS)
+        {
+            luaL_pushresult(&buf);
+        }else
+        {
+            lua_pushnil(L);
+            lua_pushinteger(L,v);
+            return 2;
+        }
+    }else
+    {
+        const char *filename = luaL_checkstring(L, 2);
+        cairo_status_t v = cairo_surface_write_to_png (surface, filename);
+        lua_pushinteger(L, v);
+    }
+
     return 1;
 }
 

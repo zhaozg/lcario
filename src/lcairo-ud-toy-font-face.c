@@ -22,12 +22,17 @@
 
 static int new_ToyFontFace (lua_State *L)
 {
+    const char *family;
+    cairo_font_slant_t slant;
+    cairo_font_weight_t weight;
+    cairo_font_face_t *ff;
+
     lua_remove(L, 1); // remove cairo.ToyFontFace
 
-    const char *family = luaL_checkstring(L, 1);
-    cairo_font_slant_t slant = (cairo_font_slant_t) luaL_checkinteger(L, 2);
-    cairo_font_weight_t weight = (cairo_font_weight_t) luaL_checkinteger(L, 3);
-    cairo_font_face_t *ff = cairo_toy_font_face_create (family, slant, weight);
+    family = luaL_checkstring(L, 1);
+    slant = (cairo_font_slant_t) luaL_checkinteger(L, 2);
+    weight = (cairo_font_weight_t) luaL_checkinteger(L, 3);
+    ff = cairo_toy_font_face_create (family, slant, weight);
 
     return new_FontFace(L, LUACAIRO ".ToyFontFace.mt", ff, CAIRO_FONT_TYPE_TOY, 1);
 }

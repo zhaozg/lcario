@@ -22,13 +22,19 @@
 
 static int new_Win32ScaledFont (lua_State *L)
 {
+    cairo_font_face_t *font_face;
+    const cairo_matrix_t *font_matrix;
+    const cairo_matrix_t *ctm;
+    const cairo_font_options_t *options ;
+    cairo_scaled_font_t *sf;
+
     lua_remove(L, 1); // remove cairo.Win32ScaledFont
 
-    cairo_font_face_t *font_face = get_cairo_font_face_t (L, 1);
-    const cairo_matrix_t *font_matrix = get_cairo_matrix_t (L, 2);
-    const cairo_matrix_t *ctm = get_cairo_matrix_t (L, 3);
-    const cairo_font_options_t *options = get_cairo_font_options_t (L, 4);
-    cairo_scaled_font_t *sf = cairo_scaled_font_create (font_face, font_matrix, ctm, options);
+    font_face = get_cairo_font_face_t (L, 1);
+    font_matrix = get_cairo_matrix_t (L, 2);
+    ctm = get_cairo_matrix_t (L, 3);
+    options = get_cairo_font_options_t (L, 4);
+    sf = cairo_scaled_font_create (font_face, font_matrix, ctm, options);
 
     return new_ScaledFont(L, LUACAIRO ".Win32ScaledFont.mt", sf, 1, 1);
 }

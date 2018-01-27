@@ -21,16 +21,21 @@
 
 static int new_PsSurface (lua_State *L)
 {
+    const char *filename;
+    double width_in_points;
+    double height_in_points;
+    cairo_surface_t *cs;
+
     lua_remove(L, 1); // remove cairo.PsSurface
 
     //FIXME
     //{"create_for_stream",             l_cairo_ps_surface_create_for_stream},
 
     //{"create",                        l_cairo_ps_surface_create},
-    const char *filename = luaL_checkstring(L, 1);
-    double width_in_points = luaL_checknumber(L, 2);
-    double height_in_points = luaL_checknumber(L, 3);
-    cairo_surface_t *cs = cairo_ps_surface_create(filename, width_in_points, height_in_points);
+    filename = luaL_checkstring(L, 1);
+    width_in_points = luaL_checknumber(L, 2);
+    height_in_points = luaL_checknumber(L, 3);
+    cs = cairo_ps_surface_create(filename, width_in_points, height_in_points);
 
     return new_Surface(L, LUACAIRO ".PsSurface.mt", cs, CAIRO_SURFACE_TYPE_PS, 1);
 }

@@ -29,6 +29,10 @@ typedef struct _Path
 
 static int new_Path (lua_State *L)
 {
+    cairo_t *cr;
+    cairo_path_t *path;
+    Path *o;
+
     lua_remove(L, 1); // remove cairo.Path
 
     // cairo_public cairo_path_t *
@@ -37,10 +41,10 @@ static int new_Path (lua_State *L)
     // cairo_public cairo_path_t *
     // cairo_copy_path_flat (cairo_t *cr);
     
-    cairo_t *cr = get_cairo_t (L, 1);
-    cairo_path_t *path = cairo_copy_path (cr);
+    cr = get_cairo_t (L, 1);
+    path = cairo_copy_path (cr);
     
-    Path *o = (Path *) lua_newuserdata(L, sizeof(Path));
+    o = (Path *) lua_newuserdata(L, sizeof(Path));
     o->path_     = path;
     o->havepath_ = 1;
 

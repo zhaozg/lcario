@@ -22,9 +22,10 @@
 
 static int new_UserFontFace (lua_State *L)
 {
+    cairo_font_face_t *ff;
     lua_remove(L, 1); // remove cairo.UserFontFace
 
-    cairo_font_face_t *ff = cairo_user_font_face_create ();
+    ff = cairo_user_font_face_create ();
 
     return new_FontFace(L, LUACAIRO ".UserFontFace.mt", ff, CAIRO_FONT_TYPE_USER, 1);
 }

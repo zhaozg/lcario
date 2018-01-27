@@ -243,8 +243,9 @@ static int l_cairo_append_path(lua_State* L)
 // cairo_path_destroy (cairo_path_t *path);
 static int l_cairo_path_destroy(lua_State* L)
 {
+    cairo_path_t *path;
     remove_Context(L, 1); // if called via Context userdata
-    cairo_path_t *path = get_cairo_path_t (L, 1);
+    path = get_cairo_path_t (L, 1);
     cairo_path_destroy (path);
     return 0;
 }
@@ -313,6 +314,8 @@ static int l_cairo_path_data_header_type(lua_State* L)
 {
     cairo_path_t *path = get_cairo_path_t (L, 1);
     int i = luaL_checkinteger(L, 2);
+    cairo_path_data_t* data;
+    cairo_path_data_type_t t;
 
     int num_data = path->num_data;
     if (i < 0 || i >= num_data)
@@ -321,8 +324,8 @@ static int l_cairo_path_data_header_type(lua_State* L)
         return 0;
     }
 
-    cairo_path_data_t* data = &path->data[i];
-    cairo_path_data_type_t t = data->header.type;
+    data = &path->data[i];
+    t = data->header.type;
 
     lua_pushinteger(L, t);
     return 1;
@@ -333,6 +336,8 @@ static int l_cairo_path_data_header_length(lua_State* L)
 {
     cairo_path_t *path = get_cairo_path_t (L, 1);
     int i = luaL_checkinteger(L, 2);
+    cairo_path_data_t* data;
+    int length;
 
     int num_data = path->num_data;
     if (i < 0 || i >= num_data)
@@ -341,8 +346,8 @@ static int l_cairo_path_data_header_length(lua_State* L)
         return 0;
     }
 
-    cairo_path_data_t* data = &path->data[i];
-    int length = data->header.length;
+    data = &path->data[i];
+    length = data->header.length;
 
     lua_pushinteger(L, length);
     return 1;
@@ -354,6 +359,9 @@ static int l_cairo_path_data_point(lua_State* L)
     cairo_path_t *path = get_cairo_path_t (L, 1);
     int i = luaL_checkinteger(L, 2);
     int pi = luaL_checkinteger(L, 3);
+    cairo_path_data_t* data;
+    double x;
+    double y;
 
     int num_data = path->num_data;
     if (i < 0 || i >= num_data)
@@ -362,7 +370,7 @@ static int l_cairo_path_data_point(lua_State* L)
         return 0;
     }
 
-    cairo_path_data_t* data = &path->data[i];
+    data = &path->data[i];
 
 /*
  * As of cairo 1.4, cairo does not mind if there are more elements in
@@ -393,8 +401,8 @@ static int l_cairo_path_data_point(lua_State* L)
     //     return 0;
     // }
 
-    double x = data[pi].point.x;
-    double y = data[pi].point.y;
+    x = data[pi].point.x;
+    y = data[pi].point.y;
 
     lua_pushnumber(L, x);
     lua_pushnumber(L, y);

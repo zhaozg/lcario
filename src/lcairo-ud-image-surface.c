@@ -21,6 +21,11 @@
 
 static int new_ImageSurface (lua_State *L)
 {
+    cairo_format_t format;
+    int width;
+    int height;
+    cairo_surface_t *cs;
+
     lua_remove(L, 1); // remove cairo.ImageSurface
 
     //FIXME
@@ -29,10 +34,10 @@ static int new_ImageSurface (lua_State *L)
     //{"create_from_png_stream",                   l_cairo_image_surface_create_from_png_stream},
 
     //{"create",                                   l_cairo_image_surface_create},
-    cairo_format_t format = (cairo_format_t) luaL_checkinteger(L, 1);
-    int width = luaL_checkinteger(L, 2);
-    int height = luaL_checkinteger(L, 3);
-    cairo_surface_t *cs = cairo_image_surface_create (format, width, height);
+    format = (cairo_format_t) luaL_checkinteger(L, 1);
+    width = luaL_checkinteger(L, 2);
+    height = luaL_checkinteger(L, 3);
+    cs = cairo_image_surface_create (format, width, height);
 
     return new_Surface(L, LUACAIRO ".ImageSurface.mt", cs, CAIRO_SURFACE_TYPE_IMAGE, 1);
 }

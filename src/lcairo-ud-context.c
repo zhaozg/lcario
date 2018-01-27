@@ -29,13 +29,17 @@ typedef struct _Context
 
 static int new_Context (lua_State *L)
 {
+    cairo_surface_t* target;
+    cairo_t *cr;
+    Context *o;
+
     lua_remove(L, 1); // remove cairo.Context
 
   //{"create",                                   l_cairo_create},
-    cairo_surface_t* target = get_cairo_surface_t (L, 1);
-    cairo_t *cr = cairo_create(target);
+    target = get_cairo_surface_t (L, 1);
+    cr = cairo_create(target);
 
-    Context *o = (Context *) lua_newuserdata(L, sizeof(Context));
+    o = (Context *) lua_newuserdata(L, sizeof(Context));
     o->cr_     = cr;
     o->havecr_ = 1;
 

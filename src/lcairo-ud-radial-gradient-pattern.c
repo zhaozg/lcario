@@ -22,16 +22,19 @@
 
 static int new_RadialGradient (lua_State *L)
 {
+    double cx0,cy0,radius0, cx1,cy1,radius1;
+    cairo_pattern_t *cp;
+
     lua_remove(L, 1); // remove cairo.RadialGradient
 
     //{"create_radial",                    l_cairo_pattern_create_radial},
-    double cx0 = luaL_checknumber(L, 1);
-    double cy0 = luaL_checknumber(L, 2);
-    double radius0 = luaL_checknumber(L, 3);
-    double cx1 = luaL_checknumber(L, 4);
-    double cy1 = luaL_checknumber(L, 5);
-    double radius1 = luaL_checknumber(L, 6);
-    cairo_pattern_t *cp = cairo_pattern_create_radial(cx0, cy0, radius0, cx1, cy1, radius1);
+    cx0 = luaL_checknumber(L, 1);
+    cy0 = luaL_checknumber(L, 2);
+    radius0 = luaL_checknumber(L, 3);
+    cx1 = luaL_checknumber(L, 4);
+    cy1 = luaL_checknumber(L, 5);
+    radius1 = luaL_checknumber(L, 6);
+    cp = cairo_pattern_create_radial(cx0, cy0, radius0, cx1, cy1, radius1);
 
     return new_Pattern(L, LUACAIRO ".RadialGradient.mt", cp, CAIRO_PATTERN_TYPE_RADIAL, 1);
 }

@@ -21,10 +21,12 @@
 
 static cairo_font_extents_t check_FontExtents (lua_State* L, int idx)
 {
+    cairo_font_extents_t extents;
+	
     luaL_checktype(L, idx, LUA_TTABLE);
     lua_pushvalue(L, idx); // copy table to top
 
-    cairo_font_extents_t extents;
+
     extents.ascent        = get_numfield(L, "ascent");
     extents.descent       = get_numfield(L, "descent");
     extents.height        = get_numfield(L, "height");
@@ -37,11 +39,12 @@ static cairo_font_extents_t check_FontExtents (lua_State* L, int idx)
 
 static int new_FontExtents (lua_State *L)
 {
+    cairo_font_extents_t *fe;
     cairo_font_extents_t fein = {0, 0, 0, 0, 0};
     int top = lua_gettop(L);
     if (top > 1) fein = check_FontExtents (L, 2);
 
-    cairo_font_extents_t *fe = (cairo_font_extents_t *) lua_newuserdata(L, sizeof(cairo_font_extents_t));
+    fe = (cairo_font_extents_t *) lua_newuserdata(L, sizeof(cairo_font_extents_t));
     *fe = fein;
 
     luaL_getmetatable(L, LUACAIRO ".FontExtents.mt");
@@ -68,7 +71,7 @@ static const struct luaL_Reg FontExtents_methods[] = {
     {NULL, NULL}
 };
 
-static const Xet_reg_pre FontExtents_getters[] = {
+static Xet_reg_pre FontExtents_getters[] = {
     {"ascent",        Xet_get_number, offsetof(cairo_font_extents_t, ascent)        },
     {"descent",       Xet_get_number, offsetof(cairo_font_extents_t, descent)       },
     {"height",        Xet_get_number, offsetof(cairo_font_extents_t, height)        },
@@ -77,7 +80,7 @@ static const Xet_reg_pre FontExtents_getters[] = {
     {0, 0, 0}
 };
 
-static const Xet_reg_pre FontExtents_setters[] = {
+static Xet_reg_pre FontExtents_setters[] = {
     {"ascent",        Xet_set_number, offsetof(cairo_font_extents_t, ascent)        },
     {"descent",       Xet_set_number, offsetof(cairo_font_extents_t, descent)       },
     {"height",        Xet_set_number, offsetof(cairo_font_extents_t, height)        },

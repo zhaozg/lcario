@@ -22,6 +22,9 @@
 
 static int new_Win32Surface (lua_State *L)
 {
+    HDC hdc;
+    cairo_surface_t *cs;
+
     lua_remove(L, 1); // remove cairo.Win32Surface
 
     //FIXME
@@ -29,8 +32,8 @@ static int new_Win32Surface (lua_State *L)
     //{"create_with_dib",                          l_cairo_win32_surface_create_with_dib},
 
     //{"create",                                   l_cairo_win32_surface_create},
-    HDC hdc = (HDC) check_lightuserdata(L, 1);
-    cairo_surface_t *cs = cairo_win32_surface_create(hdc);
+    hdc = (HDC) check_lightuserdata(L, 1);
+    cs = cairo_win32_surface_create(hdc);
 
     return new_Surface(L, LUACAIRO ".Win32Surface.mt", cs, CAIRO_SURFACE_TYPE_WIN32, 1);
 }
@@ -116,11 +119,14 @@ static int luaopen_lWin32Surface (lua_State *L)
 
 static int new_Win32PrintingSurface (lua_State *L)
 {
+    HDC hdc;
+    cairo_surface_t *cs;
+
     lua_remove(L, 1); // remove cairo.Win32PrintingSurface
 
     //{"create",                                   l_cairo_win32_printing_surface_create},
-    HDC hdc = (HDC) check_lightuserdata(L, 1);
-    cairo_surface_t *cs = cairo_win32_printing_surface_create(hdc);
+    hdc = (HDC) check_lightuserdata(L, 1);
+    cs = cairo_win32_printing_surface_create(hdc);
 
     return new_Surface(L, LUACAIRO ".Win32PrintingSurface.mt", cs, CAIRO_SURFACE_TYPE_WIN32_PRINTING, 1);
 }

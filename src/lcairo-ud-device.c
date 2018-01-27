@@ -30,14 +30,18 @@ typedef struct _Device
 
 static int new_Device (lua_State *L)
 {
+    cairo_surface_t *surface;
+    cairo_device_t *dev;
+    Device *o;
+
     lua_remove(L, 1); // remove cairo.Device
 
     // cairo_public cairo_device_t *
     // cairo_surface_get_device (cairo_surface_t *surface);
-    cairo_surface_t *surface = get_cairo_surface_t (L, 1);
-    cairo_device_t *dev = cairo_surface_get_device (surface);
+    surface = get_cairo_surface_t (L, 1);
+    dev = cairo_surface_get_device (surface);
     
-    Device *o = (Device *) lua_newuserdata(L, sizeof(Device));
+    o = (Device *) lua_newuserdata(L, sizeof(Device));
     o->dev_     = dev;
     o->havedev_ = 1;
 

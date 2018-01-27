@@ -21,14 +21,17 @@
 
 static int new_LinearGradient (lua_State *L)
 {
+    double x0,y0,x1,y1;
+    cairo_pattern_t *cp;
+
     lua_remove(L, 1); // remove cairo.LinearGradient
 
     //{"create_linear",                    l_cairo_pattern_create_linear},
-    double x0 = luaL_checknumber(L, 1);
-    double y0 = luaL_checknumber(L, 2);
-    double x1 = luaL_checknumber(L, 3);
-    double y1 = luaL_checknumber(L, 4);
-    cairo_pattern_t *cp = cairo_pattern_create_linear(x0, y0, x1, y1);
+    x0 = luaL_checknumber(L, 1);
+    y0 = luaL_checknumber(L, 2);
+    x1 = luaL_checknumber(L, 3);
+    y1 = luaL_checknumber(L, 4);
+    cp = cairo_pattern_create_linear(x0, y0, x1, y1);
 
     return new_Pattern(L, LUACAIRO ".LinearGradient.mt", cp, CAIRO_PATTERN_TYPE_LINEAR, 1);
 }

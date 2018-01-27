@@ -21,17 +21,20 @@
 
 static int new_SolidPattern (lua_State *L)
 {
-    lua_remove(L, 1); // remove cairo.SolidPattern
+    cairo_pattern_t* cp = NULL;
+    double red,green,blue,alpha;
+
+	lua_remove(L, 1); // remove cairo.SolidPattern
 
     //{"create_rgb",                       l_cairo_pattern_create_rgb},
     //{"create_rgba",                      l_cairo_pattern_create_rgba},
 
-    double red = luaL_checknumber(L, 1);
-    double green = luaL_checknumber(L, 2);
-    double blue = luaL_checknumber(L, 3);
-    double alpha = luaL_optnumber(L, 4, -1);
+    red = luaL_checknumber(L, 1);
+    green = luaL_checknumber(L, 2);
+    blue = luaL_checknumber(L, 3);
+    alpha = luaL_optnumber(L, 4, -1);
 
-    cairo_pattern_t* cp = NULL;
+
 
     if (alpha < 0)
         cp = cairo_pattern_create_rgb (red, green, blue);

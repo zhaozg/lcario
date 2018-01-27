@@ -20,8 +20,8 @@
 #include <lua.h>
 #include <lualib.h>
 #include <lauxlib.h>
+#include <cairo-version.h>
 #include <cairo.h>
-
 
 #define LUACAIRO "cairo"
 
@@ -277,7 +277,7 @@
 #include "lcairo-private-getters.c"
 
 
-int luaopen_lcairo(lua_State* L)
+LUA_API int luaopen_lcairo(lua_State* L)
 {
     luaopen_lcairo_private (L);
     luaopen_lcairo_ud_font_extents (L);

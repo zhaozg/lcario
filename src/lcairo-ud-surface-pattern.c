@@ -21,11 +21,14 @@
 
 static int new_SurfacePattern (lua_State *L)
 {
+    cairo_surface_t *surface;
+    cairo_pattern_t *cp;
+
     lua_remove(L, 1); // remove cairo.SurfacePattern
 
     //{"create_for_surface",               l_cairo_pattern_create_for_surface},
-    cairo_surface_t *surface = get_cairo_surface_t (L, 1);
-    cairo_pattern_t *cp = cairo_pattern_create_for_surface (surface);
+    surface = get_cairo_surface_t (L, 1);
+    cp = cairo_pattern_create_for_surface (surface);
 
     return new_Pattern(L, LUACAIRO ".SurfacePattern.mt", cp, CAIRO_PATTERN_TYPE_SURFACE, 1);
 }

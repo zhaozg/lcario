@@ -20,10 +20,11 @@
 
 static cairo_matrix_t check_Matrix(lua_State* L, int idx)
 {
+    cairo_matrix_t matrix;
+	
     luaL_checktype(L, idx, LUA_TTABLE);
     lua_pushvalue(L, idx); // copy table to top
 
-    cairo_matrix_t matrix;
     matrix.xx = get_numfield(L, "xx");
     matrix.yx = get_numfield(L, "yx");
     matrix.xy = get_numfield(L, "xy");
@@ -37,11 +38,13 @@ static cairo_matrix_t check_Matrix(lua_State* L, int idx)
 
 static int new_Matrix (lua_State *L)
 {
+    cairo_matrix_t *m;
+
     cairo_matrix_t mtin = {0, 0, 0, 0, 0, 0};
     int top = lua_gettop(L);
     if (top > 1) mtin = check_Matrix(L, 2);
 
-    cairo_matrix_t *m = (cairo_matrix_t *) lua_newuserdata(L, sizeof(cairo_matrix_t));
+    m = (cairo_matrix_t *) lua_newuserdata(L, sizeof(cairo_matrix_t));
     *m = mtin;
 
     luaL_getmetatable(L, LUACAIRO ".Matrix.mt");
@@ -80,7 +83,7 @@ static const struct luaL_Reg Matrix_methods[] = {
     {NULL, NULL}
 };
 
-static const Xet_reg_pre Matrix_getters[] = {
+static Xet_reg_pre Matrix_getters[] = {
     {"xx",    Xet_get_number, offsetof(cairo_matrix_t, xx) },
     {"yx",    Xet_get_number, offsetof(cairo_matrix_t, yx) },
     {"xy",    Xet_get_number, offsetof(cairo_matrix_t, xy) },
@@ -90,7 +93,7 @@ static const Xet_reg_pre Matrix_getters[] = {
     {0, 0, 0}
 };
 
-static const Xet_reg_pre Matrix_setters[] = {
+static Xet_reg_pre Matrix_setters[] = {
     {"xx",    Xet_set_number, offsetof(cairo_matrix_t, xx) },
     {"yx",    Xet_set_number, offsetof(cairo_matrix_t, yx) },
     {"xy",    Xet_set_number, offsetof(cairo_matrix_t, xy) },
